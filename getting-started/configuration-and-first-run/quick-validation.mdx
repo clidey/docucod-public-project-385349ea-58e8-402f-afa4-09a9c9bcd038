@@ -1,0 +1,172 @@
+---
+title: "Quick Validation Checklist"
+description: "Helps you verify your setup and integration with immediate feedback steps for each supported platform. Lists observable outputs, console logs, or UI changes you should see, and how to confirm correct linking of the plugin, metadata, and UI module."
+---
+
+# Quick Validation Checklist
+
+This checklist helps you verify that your AboutLibraries setup and integration are correctly implemented. By following these validation steps, you can confirm platform-specific plugin linkage, metadata availability, and UI rendering with immediate feedback.
+
+Each step outlines observable outputs, console logs, or UI changes you should see, alongside methods to confirm correct integration of the plugin, metadata, and UI module.
+
+---
+
+## 1. Android Platform Validation
+
+### Step 1: Confirm Plugin Integration
+
+- **What to check:** The Gradle Plugin (`com.mikepenz.aboutlibraries.plugin.android`) is applied correctly in your Android app's `build.gradle.kts`.
+- **How to verify:**
+  - Build your app and ensure no errors related to AboutLibraries plugin tasks.
+  - Check that the generated `aboutlibraries.json` file is created under `src/main/res/raw/` or equivalent resource directory.
+
+### Step 2: Validate Metadata Generation
+
+- **What to check:** `aboutlibraries.json` exists and contains the processed libraries and licenses metadata.
+- **How to verify:**
+  - In Android Studio, navigate to `src/main/res/raw/aboutlibraries.json`.
+  - Open the file and verify it is a well-formed JSON containing library and license entries.
+
+### Step 3: Verify UI Integration
+
+- **What to check:** The AboutLibraries UI components correctly load and display library information.
+- **How to verify:**
+  - Run your app and navigate to the AboutLibraries screen.
+  - You should see a list of libraries with their names, versions, and licenses.
+  - The app icon, version name, and version code display as configured.
+
+### Step 4: Console Log Observations
+
+- **What to check:** No errors or warnings related to AboutLibraries execution during the app launch.
+- **How to verify:**
+  - Monitor Logcat output for entries from `AboutLibraries` or `LibsViewModel`.
+  - Typical log entries relate to loading libraries, no exceptions thrown.
+
+<Note>
+If the list is empty or fails to load, verify that `aboutlibraries.json` is properly bundled and accessible as an Android resource.
+</Note>
+
+---
+
+## 2. Desktop & Compose Multiplatform Validation
+
+### Step 1: Confirm Metadata Export
+
+- **What to check:** The `exportLibraryDefinitions` Gradle task has been run for the desktop or other multiplatform targets.
+- **How to verify:**
+  - Locate the JSON metadata file at the configured path, e.g. `src/desktopMain/composeResources/files/aboutlibraries.json`.
+  - Confirm the file contains populated library and license data.
+
+### Step 2: Verify Compose UI Usage
+
+- **What to check:** The `LibrariesContainer` or similar Compose UI component correctly loads and renders the metadata.
+- **How to verify:**
+  - Launch the desktop sample application via `./gradlew :app-desktop:run`.
+  - The UI displays the list of included libraries with proper formatting.
+
+### Step 3: Metadata Loading Check
+
+- **What to check:** Metadata is loaded from the correct JSON resource location.
+- **How to verify:**
+  - Inspect logs or debug sessions to ensure the JSON resource is read without errors.
+
+<Note>
+Manual export and inclusion of the metadata file are required for platforms excluding Android to ensure data availability.
+</Note>
+
+---
+
+## 3. WASM (Web Assembly) Validation
+
+### Step 1: Build and Export Metadata
+
+- **What to check:** Metadata export is configured specifically for the wasmJs target.
+- **How to verify:**
+  - Run the Gradle command:
+  ```bash
+  ./gradlew :app-wasm:exportLibraryDefinitions -PaboutLibraries.outputFile=src/jsMain/resources/aboutlibraries.json -PaboutLibraries.exportVariant=wasmJs
+  ```
+  - Confirm the JSON file is generated and placed correctly.
+
+### Step 2: Run and Validate UI Rendering
+
+- **What to check:** The WASM web app loads and displays the library metadata as expected.
+- **How to verify:**
+  - Run the web application via `./gradlew :app-wasm:run`.
+  - Check the browser UI for the libraries list rendered through Compose Web.
+
+### Step 3: Observe Console Logs
+
+- **What to check:** Absence of JSON loading or rendering errors in the browser developer console.
+
+<Warning>
+Due to browser caching or resource serving restrictions, ensure the JSON resource URL is correct and accessible.
+</Warning>
+
+---
+
+## 4. Common Checks Across Platforms
+
+### Metadata File Integrity
+
+- Verify that the `aboutlibraries.json` file contains both `libraries` and `licenses` arrays populated.
+- Validate the JSON structure with a JSON validator to avoid parsing errors.
+
+### UI Module Linking
+
+- Confirm that the UI module (e.g., Compose UI or the legacy view-based UI) is properly installed and included as a dependency.
+
+### Plugin Configuration
+
+- Verify plugin configuration in your build script; check for options such as:
+  - `outputFile` correct path
+  - `fetchRemoteLicense` and `fetchRemoteFunding` settings
+  - License strict mode levels
+
+### Application Behavior
+
+- Ensure the AboutLibraries feature activates via your app’s navigation and that the UI reflects your plugin/custom builder options (e.g., show version, show icon).
+
+---
+
+## Troubleshooting Tips
+
+- **No Library Data Shown:**
+  - Confirm metadata file location and content
+  - Check that the file is bundled or accessible in your target platform's resources
+  - Confirm the UI is referencing the correct resource path or load logic
+
+- **Build Errors on Plugin Application:**
+  - Verify you apply the correct plugin variant (`plugin` vs `plugin.android`)
+  - Check Gradle synchronization status and update to the latest compatible plugin version
+
+- **UI Not Rendering or Crashing:**
+  - Check for runtime exceptions in logs
+  - Validate that the UI dependencies (Compose or view-based) are up to date
+  - Ensure there are no conflicts with other UI libraries or versions
+
+- **Strict Mode License Failures:**
+  - Review your allowed license list and `allowedLicensesMap` in your plugin configuration
+  - Add missing approved licenses or override license info as needed
+
+---
+
+## Success Criteria
+
+When all checks pass:
+
+- Your build completes without AboutLibraries plugin errors.
+- `aboutlibraries.json` is generated in the expected location with valid content.
+- Your app displays a populated, searchable, and detectable library list UI.
+- Runtime logs and console output are free of AboutLibraries-related errors.
+
+---
+
+## Additional Resources
+
+- [Generate Metadata Guide](../generate-metadata)
+- [Plugin Configuration](../plugin-configuration)
+- [First App Integration and Usage](../first-app-integration)
+- [Compose UI API Reference](../../../api-reference/compose-api/compose-librariescontainer-api)
+
+---
