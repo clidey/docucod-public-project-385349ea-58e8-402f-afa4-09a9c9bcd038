@@ -1,0 +1,121 @@
+---
+title: "Product Value & Benefits"
+description: "Understand the core benefits: legal compliance, transparency, automation of license metadata, strong caching, multiplatform and Compose UI support, and eliminating manual tracking of dependencies. See how AboutLibraries saves developer time and reduces risk."
+---
+
+# Product Value & Benefits
+
+Discover how AboutLibraries transforms the way you manage third-party dependencies by automating license metadata collection and presentation. This page highlights the core benefits that make AboutLibraries indispensable for developers seeking legal compliance, transparency, and efficiency.
+
+---
+
+## Delivering Legal Compliance with Confidence
+
+Maintaining proper software license compliance can be daunting and error-prone when done manually. AboutLibraries simplifies this critical task by:
+
+- Automatically collecting comprehensive license and attribution information for all Gradle dependencies.
+- Enabling strict license enforcement policies that detect and alert on disallowed licenses during builds.
+- Providing full license texts for embedded display, ensuring clear legal transparency.
+
+This automation drastically reduces risks related to inadvertent license violations, safeguarding your projects and your organization.
+
+## Transparency That Builds Trust
+
+End-users and stakeholders increasingly demand visibility into the open source components their software uses. AboutLibraries meets this demand by:
+
+- Embedding detailed third-party library metadata directly into your app without runtime performance impact.
+- Displaying clear attributions, developer information, and funding sources through customizable UI components.
+- Supporting Material You Design (Compose Material3) to integrate naturally with modern user interfaces.
+
+Transparency not only enhances user trust but also positions your product as responsible and respectful toward open source contributors.
+
+## Automation that Saves Developer Time
+
+Manually tracking licenses and library information is a tedious, error-prone overhead. AboutLibraries automates this process end-to-end:
+
+- Gradle plugin scans dependencies at build time to collect and collate library metadata.
+- Outputs structured JSON files that can be easily integrated into multiplatform projects, including Android, desktop, and even WebAssembly.
+- Supports incremental builds with strong Gradle caching, making repeated metadata collection efficient and fast.
+
+Save countless hours by letting AboutLibraries handle what it's built for—accurate and reliable metadata automation.
+
+## Robust Multiplatform and UI Support
+
+AboutLibraries is built with modern development needs at its core:
+
+- Seamless integration with Kotlin Multiplatform projects, covering Android, Desktop JVM, and WASM JS targets.
+- Compose UI support for both the legacy Compose Material and the latest Compose Material3, providing flexible, themed components for license displays.
+- Enables developers to customize UI components while still benefiting from reliable metadata.
+
+This expansive support future-proofs your app across platforms and UI paradigms.
+
+## Eliminate Manual Dependency Tracking
+
+Tracking dependencies in multiple places invites inconsistencies and vulnerabilities. AboutLibraries centralizes this by:
+
+- Managing dependency metadata within your build process automatically.
+- Eliminating the need for manual attribution text or external license tracking spreadsheets.
+- Providing a single source of truth that is tightly coupled with your actual build dependencies.
+
+Reduce errors and minimize compliance headaches through automation and integration.
+
+---
+
+## Real-World Impact
+
+Imagine building an Android app that incorporates dozens of open source libraries. Without automation, you must painstakingly verify each license type, copy legal text, and manage attributions — a process prone to mistakes and delays.
+
+With AboutLibraries, you configure a Gradle plugin once. At every build, it fetches accurate, up-to-date license and developer information, packaged directly into your app’s About screen. You enforce license policies that block disallowed licenses early, preventing costly compliance issues down the line.
+
+This workflow delivers peace of mind, improved legal safety, and frees your team to focus on building features.
+
+---
+
+## Tips for Success
+
+- Define a strict license policy upfront in your AboutLibraries Gradle plugin configuration to prevent unauthorized license usage early.
+- Utilize AboutLibraries’ Compose Material3 components to elegantly present license and funding information, improving user experience.
+- Leverage the Gradle caching and offline modes to speed up builds and reduce external dependencies during CI runs.
+
+---
+
+## Common Pitfalls to Avoid
+
+- **Ignoring License Updates:** Regularly refresh your dependency metadata to capture any license changes upstream.
+- **Overlooking Funding Information:** Enable funding collection to recognize and honor supporting developers properly.
+- **Neglecting Multiplatform Setup:** Ensure all target platforms include AboutLibraries resources and plugin configurations to avoid missing data in builds.
+
+---
+
+## Getting Started Preview
+
+To unlock these benefits, get started by:
+
+1. Installing the AboutLibraries Gradle plugin in your project.
+2. Configuring collection paths, license enforcement, and export settings in your `build.gradle.kts`.
+3. Building your project to generate the libraries metadata JSON.
+4. Integrating AboutLibraries Compose UI components to display the data in your app.
+
+For detailed setup instructions and examples, visit the [Getting Started guide](https://github.com/mikepenz/AboutLibraries/blob/main/docs/guides/getting-started/setup-gradle-plugin.md).
+
+---
+
+## See Also
+
+- [What is AboutLibraries?](/overview/aboutlibraries-intro/what-is-aboutlibraries) for product introduction.
+- [Target Audience & Typical Use Cases](/overview/aboutlibraries-intro/target-audience-use-cases) to understand who benefits most.
+- [Feature Overview](/overview/aboutlibraries-intro/feature-summary) for deeper insights on capabilities.
+- [Plugin Configuration](/getting-started/configuration-and-first-run/plugin-configuration) for build setup.
+
+
+---
+
+For full legal details, the licenses attached to your libraries are embedded directly, such as Apache License 2.0 or MIT License, guaranteeing full transparency and compliance.
+
+
+---
+
+*© 2024 AboutLibraries by Mike Penz. All rights reserved.*
+
+
+
