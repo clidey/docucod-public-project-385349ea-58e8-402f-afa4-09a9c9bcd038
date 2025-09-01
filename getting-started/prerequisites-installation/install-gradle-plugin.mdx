@@ -1,0 +1,219 @@
+---
+title: "Install the Gradle Plugin"
+description: "Guides users through adding the AboutLibraries Gradle plugin using the recommended plugins DSL, differentiating between the main and Android-specific variants. Covers both single-module and multi-module project scenarios, and highlights versioning strategies and important migration notes."
+---
+
+# Install the Gradle Plugin
+
+This guide walks you through adding the AboutLibraries Gradle plugin to your project. You will learn how to apply the plugin using the recommended plugins DSL, distinguish between the main and Android-specific plugin variants, and configure setups for both single-module and multi-module Gradle projects. This will ensure your build system correctly generates the third-party license and dependency metadata needed for AboutLibraries to function.
+
+---
+
+## 1. Understanding the Plugin Variants
+
+AboutLibraries provides two Gradle plugin variants since version 13.x.y:
+
+- **Main Plugin** (`com.mikepenz.aboutlibraries.plugin`):
+  - Recommended for most projects
+  - Provides manual tasks for generating library definitions (like `exportLibraryDefinitions`)
+  - Does **not** automatically integrate into the Android build process
+
+- **Android Plugin** (`com.mikepenz.aboutlibraries.plugin.android`):
+  - Designed specifically for Android projects
+  - Automatically hooks into the Android build process
+  - Generates library definitions automatically during builds
+  - Includes generated files as Android resources
+  - No need to execute generation tasks manually
+
+<Tip>
+Choose the plugin variant based on whether you need automatic Android build integration.
+
+- Use **Main Plugin** for manual control and multiplatform projects.
+- Use **Android Plugin** if you want seamless Android build step integration.
+</Tip>
+
+---
+
+## 2. Applying the Gradle Plugin
+
+### 2.1 Using the Recommended plugins DSL
+
+To add the AboutLibraries plugin, modify your Gradle build scripts as follows.
+
+#### For Single-Module Projects
+
+Add in your module's `build.gradle.kts` file:
+
+```kotlin
+plugins {
+    // Apply the main plugin
+    id("com.mikepenz.aboutlibraries.plugin") version "<latest-version>"
+    
+    // Or, for Android projects requiring automatic build integration
+    // id("com.mikepenz.aboutlibraries.plugin.android") version "<latest-version>"
+}
+```
+
+Replace `<latest-version>` with the current released version (e.g., `13.0.0-b01`).
+
+
+#### For Multi-Module Projects
+
+1. **Root `build.gradle.kts`**: Declare the plugin with `apply false` to make it available without applying it globally.
+
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin") version "<latest-version>" apply false
+}
+```
+
+2. **Individual module `build.gradle.kts` files**: Apply the plugin where needed, for example:
+
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin")
+}
+```
+
+Use the `.android` variant similarly if you want Android auto-integration.
+
+<Note>
+Avoid applying the plugin globally in all modules unless all require AboutLibraries features.
+</Note>
+
+---
+
+### 2.2 Using Legacy Plugin Application Method
+
+If you are maintaining older Gradle versions or have legacy scripts, you can apply the plugin with the classpath and `apply plugin` syntax.
+
+In your root `build.gradle`:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath("com.mikepenz.aboutlibraries.plugin:aboutlibraries-plugin:<latest-version>")
+    }
+}
+```
+
+In your app module's `build.gradle`:
+
+```gradle
+apply plugin: 'com.mikepenz.aboutlibraries.plugin'
+```
+
+This method is not recommended for new projects.
+
+---
+
+## 3. Versioning and Upgrading
+
+- Always use the latest stable plugin version for improved features and fixes.
+- Check the [AboutLibraries GitHub releases](https://github.com/mikepenz/AboutLibraries/releases) for version updates.
+- When upgrading to version 13.x or above, be aware:
+  - The Gradle plugin was split into main and Android variants.
+  - The Android auto-task registration moved exclusively to the Android plugin.
+  - See the [Migration Guide](../MIGRATION.md) for detailed instructions.
+
+---
+
+## 4. Confirming Proper Plugin Installation
+
+After applying the plugin, verify:
+
+1. **Gradle Sync or Build Completes Without Errors:**
+
+Run in your terminal:
+
+```bash
+./gradlew tasks --all | grep aboutlibraries
+```
+
+You should see tasks like `exportLibraryDefinitions` listed.
+
+2. **For Android plugin:** When building your Android app, the license metadata is generated automatically without manual commands.
+
+3. **Look for the Output File:** By default, the generated `aboutlibraries.json` file will be placed in the configured output path (see plugin configuration guides). This file contains library and license metadata.
+
+<Tip>
+Running `./gradlew :app:exportLibraryDefinitions` manually will also confirm the plugin is correctly installed and functional.
+</Tip>
+
+---
+
+## 5. Best Practices and Common Pitfalls
+
+- **Do not apply both plugins in the same module.** Using both will cause conflicts.
+
+- When using the main plugin, you must manually invoke generation tasks (e.g., `exportLibraryDefinitions`) or configure your build scripts accordingly.
+
+- The Android plugin variant simplifies Android projects by running generation automatically, but may not work well with non-Android or multiplatform setups.
+
+- Always pin your plugin version.
+
+- Use the plugins DSL syntax over legacy methods for clarity and compatibility.
+
+- For multi-module projects, prefer applying the plugin per module rather than globally.
+
+---
+
+## 6. Additional Configuration Options
+
+After installation, configure the plugin behavior via the `aboutLibraries` extension in your module `build.gradle.kts` script. For details, see [Plugin Configuration Guide](../plugin-configuration).
+
+---
+
+## 7. Troubleshooting Installation Issues
+
+<AccordionGroup title="Common Installation Issues">
+<Accordion title="Plugin Not Found or Version Not Resolved">
+Verify your Gradle repositories include `gradlePluginPortal()`. Check your `pluginManagement` block in `settings.gradle.kts`.
+
+Example:
+
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+}
+```
+
+</Accordion>
+<Accordion title="Conflicting Plugin Versions or Plugins DSL Usage">
+Ensure you are not mixing legacy `classpath` + `apply` usage with plugins DSL. Always prefer one consistent approach.
+
+</Accordion>
+<Accordion title="Generated Files Not Found After Build">
+- Confirm your plugin variant choice: the Android plugin generates automatically; the main plugin requires manual task execution.
+- Check the configured output directory under the `export` block in the plugin configuration.
+- Verify build variant filters if you have them configured.
+
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 8. Next Steps
+
+- Configure the plugin settings to customize metadata generation: see [Plugin Configuration](../plugin-configuration).
+- Add AboutLibraries core and UI dependencies to your project for runtime library display: see [Add AboutLibraries Core & UI Dependencies](../add-library-dependencies).
+- Generate and integrate the `aboutlibraries.json` metadata file.
+
+---
+
+## References
+
+- [AboutLibraries GitHub Repository](https://github.com/mikepenz/AboutLibraries)
+- [Migration Guide for v13.x](../MIGRATION.md)
+- [Plugin Configuration Guide](../plugin-configuration)
+- [Add Library Dependencies](../add-library-dependencies)
+
+---
+
+By following this guide, you will successfully add the AboutLibraries Gradle plugin to your project, setting the foundation for automated third-party license collection and compliance.
+
+---

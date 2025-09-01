@@ -1,0 +1,198 @@
+---
+title: "What is AboutLibraries?"
+description: "Learn what AboutLibraries does—automating the collection of third-party library, dependency, and license information at build time, and providing simple APIs to display this metadata in your app with zero runtime overhead."
+---
+
+# What is AboutLibraries?
+
+## Unlock Comprehensive Third-Party Library Insight with Zero Runtime Overhead
+
+AboutLibraries is a powerful solution designed to automate the painstaking process of collecting detailed information about your project's third-party libraries and dependencies—including their licenses—at build time. By seamlessly aggregating this critical metadata, it empowers you to confidently visualize and manage your dependencies directly within your app, with absolutely no performance impact when your app is running.
+
+### Why AboutLibraries Matters
+
+- **Automated Dependency Discovery:** Say goodbye to manual tracking. AboutLibraries identifies all Gradle dependencies in your project, captures comprehensive data about each, and consolidates this into a single source.
+- **Built-In License Compliance:** Automatically collect license details, enabling robust compliance checks and transparent reporting.
+- **Straightforward APIs for Easy Display:** Use simple, powerful APIs to surface this metadata in your applications, ensuring end users and teams have instant visibility.
+- **Zero Runtime Overhead:** All data is gathered during build time, so your app remains lean, fast, and efficient.
+- **Multiplatform Support:** Works seamlessly with Android and Kotlin Multiplatform projects, including desktop and web targets.
+
+### Who Should Use This Page?
+
+This page is tailored for developers and teams new to AboutLibraries, aiming to understand its core purpose and the critical value it unlocks by integrating it into their build process.
+
+---
+
+## What is AboutLibraries?
+
+At its core, AboutLibraries is an automated build-time library metadata gathering tool that does the heavy lifting of collecting detailed information about every third-party dependency used in your project. 
+
+### Core Purpose
+
+- **Simplify Compliance:** Ensures that accurate license information is collated and available, helping you meet legal and organizational obligations with ease.
+- **Provide Transparency:** Makes it easy to display open-source attribution inside your application.
+- **Save Development Time:** Drastically cuts down the manual effort needed to manage dependencies and licenses.
+
+AboutLibraries achieves this by integrating directly into your Gradle build workflow via a dedicated plugin. This plugin inspects all declared dependencies, compiles metadata including license texts, developers, source control information, and funding data into a JSON file at compile time. Your app can then load this static data using AboutLibraries' simple runtime APIs and UI components, avoiding any runtime cost associated with querying or data processing.
+
+### What Sets It Apart?
+
+- **Build-Time Data Generation:** Unlike alternatives that perform runtime scanning or require manual input, AboutLibraries generates all data at build-time, eliminating performance penalties.
+- **Extensible Metadata Collection:** Supports automatic fetching of license and funding data from supported repositories and enables manual overrides via JSON configurations.
+- **Multiplatform Flexibility:** Kotlin Multiplatform compatible core and UI modules let you use it beyond Android on JVM Desktop, WASM, or other Kotlin targets.
+- **Rich UI Integration:** Ships with ready-to-use Compose UI modules (Material 2 and Material 3) for immediate presentation of library information.
+
+---
+
+## Key Features & Capabilities
+
+- **Gradle Plugin for Metadata Generation:** Runs at build-time to scan all Gradle dependencies, gather detailed metadata (name, version, developers, licenses, SCM info, funding), and export it as JSON.
+
+- **Zero Runtime Overhead API:** Runtime APIs like `Libs.Builder` allow you to load generated metadata efficiently with no background operations needed once built.
+
+- **Compose UI Modules:** Easily integrate polished UI components such as `LibrariesContainer` to display libraries with license details, developer info, and clickable links.
+
+- **License Strict Mode:** Enforce build failures for unauthorized licenses, helping teams meet strict compliance policies.
+
+- **Customizable Data Augmentation:** Add or override library and license data manually through JSON files in the config path.
+
+### Real-World Example
+
+Imagine you want to display an "About" screen listing all open-source libraries your Android app uses, including license info and developer credits. AboutLibraries enables this by:
+
+1. Running the Gradle plugin during build, which generates an `aboutlibraries.json` file with all metadata.
+2. Loading this metadata via `Libs.Builder().withContext(context).build()` in your app.
+3. Passing this to `LibrariesContainer` from the Compose UI module to render an attractive, scrollable list.
+
+All this happens without any additional network calls or runtime scanning, preserving your app's performance.
+
+---
+
+## Why Should I Care?
+
+### Immediate Benefits
+
+- **Automated license management** reduces legal risks without manual tracking.
+- **Increased transparency** builds trust with users by showing what open-source software powers your app.
+- **Time savings** through build-time automation let your team focus on core development instead of compliance.
+- **Cross-platform support** means fewer toolsets to manage for teams developing apps across multiple platforms.
+
+### Common Use Cases
+
+- Open-source or enterprise apps needing to display detailed attributions.
+- CI/CD pipelines enforcing license policies.
+- Teams requiring aggregated funding information of dependencies.
+- Projects targeting multiple Kotlin platforms with uniform license handling.
+
+### Before and After
+
+- **Without AboutLibraries:** License collection is manual, error-prone, and scattered; runtime overhead possible; compliance risks.
+- **With AboutLibraries:** License and dependency data is generated automatically, loaded instantly at runtime, and presented cleanly in-app.
+
+### Return on Investment
+
+Integrating AboutLibraries can save hours or days annually on compliance, reporting, and audit preparation, while ensuring legal soundness and improved user communication.
+
+---
+
+## Getting Started Preview
+
+### Quick Overview
+
+1. Add the AboutLibraries Gradle plugin to your project.
+2. Run your build to generate the dependency metadata JSON file.
+3. Incorporate the AboutLibraries core and Compose UI dependencies into your app.
+4. Load the metadata at runtime using the provided APIs and show it with prebuilt UI components.
+
+### Prerequisites
+
+- Your project uses Gradle for dependency management.
+- Kotlin Multiplatform or Android development environment.
+
+### Next Steps
+
+- Proceed to the [Setup Guide](../getting-started/prerequisites-installation/install-gradle-plugin) to configure the Gradle plugin.
+- Explore the [Plugin Configuration](../getting-started/configuration-and-first-run/plugin-configuration) page to customize metadata collection.
+- Learn how to [Generate Library Metadata](../getting-started/configuration-and-first-run/generate-metadata) effectively.
+
+---
+
+## Additional Resources
+
+- [AboutLibraries on GitHub](https://github.com/mikepenz/AboutLibraries): Source, examples, and latest releases.
+- [Gradle Plugin Portal](https://plugins.gradle.org/plugin/com.mikepenz.aboutlibraries.plugin): Plugin installation and versions.
+- [Feature Overview](../overview/aboutlibraries-intro/feature-summary): Explore the full feature set.
+
+---
+
+Adopting AboutLibraries transforms managing third-party dependencies from a manual chore into a seamless, automated process—delivering peace of mind and clear in-app attribution with elegance and precision.
+
+
+---
+
+# Example Code Snippet — Loading Libraries Data in Your App
+
+```kotlin
+val libs = Libs.Builder()
+    .withContext(context) // loads aboutlibraries.json from resources
+    .build()
+
+LibrariesContainer(libs) // Compose UI component to render libraries list
+```
+
+This simple integration instantly equips your app with a curated list of all third-party libraries and their licenses.
+
+
+---
+
+# Tips & Best Practices
+
+- Always commit the generated `aboutlibraries.json` to your version control to ensure consistent license visibility.
+- Use the license strict mode in your Gradle config to catch unauthorized dependencies early.
+- Extend or override library and license info locally by adding JSON files to your plugin configuration path.
+- Leverage Compose UI modules to deliver a professional and user-friendly attribution experience without crafting custom UI from scratch.
+
+
+---
+
+# Troubleshooting Common Issues
+
+<AccordionGroup title="Common Challenges and Solutions">
+<Accordion title="Missing Dependencies in Attribution">
+Sometimes transient or native dependencies may not appear.
+
+**Solution:** Add manual JSON overrides for such libraries or revisit your Gradle dependencies to ensure proper declarations.
+</Accordion>
+<Accordion title="License Information Not Complete or Missing">
+Licenses sometimes are not detected due to incomplete POM data.
+
+**Solution:** Use the plugin configuration to fetch remote license info or provide license JSON overrides.
+</Accordion>
+<Accordion title="Build Performance Impact Concerns">
+Running the plugin can add a slight build-time overhead.
+
+**Solution:** Configure variant filters and offline mode where applicable to optimize build times.
+</Accordion>
+</AccordionGroup>
+
+
+---
+
+# See Also
+
+- [Product Value & Benefits](/overview/aboutlibraries-intro/value-proposition)
+- [Target Audience & Use Cases](/overview/aboutlibraries-intro/target-audience-use-cases)
+- [Feature Overview](/overview/aboutlibraries-intro/feature-summary)
+- [Plugin Configuration](/getting-started/configuration-and-first-run/plugin-configuration)
+- [Generating Library Metadata](/getting-started/configuration-and-first-run/generate-metadata)
+- [Compose UI Integration](/guides/getting-started/visualizing-libraries)
+
+
+---
+
+For comprehensive details on installation, usage, and advanced customization, refer to the Getting Started and Guides sections of this documentation.
+
+
+---
+
+*Empower your projects with clear dependency insights and license compliance — AboutLibraries makes the complex simple and the manual automatic.*

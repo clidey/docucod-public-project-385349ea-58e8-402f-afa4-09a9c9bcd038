@@ -1,0 +1,189 @@
+---
+title: "Breaking Changes & Important Deprecations"
+description: "Catalogues notable breaking changes, deprecations, and removed features, calling attention to changes that require intervention. Clear explanations help you assess the impact, pinpointing source files and modules most affected and offering insights for affected workflow refactoring."
+---
+
+# Breaking Changes & Important Deprecations
+
+This page catalogs significant breaking changes, important deprecations, and removed features within the AboutLibraries project. It aims to help you understand impact areas, recognize what parts of your integration might need adjustment, and guide your workflow refactoring efforts accordingly.
+
+The focus is on user-facing changes that require your intervention when upgrading, explanations of what has changed, and practical advice to migrate or adapt your projects smoothly.
+
+---
+
+## Major Breaking Changes
+
+### Version 13.0.0 (Current Major Release)
+
+- **Plugin Architecture Overhaul**
+  - The Gradle plugin has been split into two separate plugins:
+    - The main plugin `com.mikepenz.aboutlibraries.plugin` that requires manual execution of export tasks like `exportLibraryDefinitions`.
+    - The Android-specific plugin `com.mikepenz.aboutlibraries.plugin.android` that automatically hooks into the Android build process to generate metadata.
+  
+  If your project previously relied on the automatic Android metadata generation, you now need to explicitly apply the Android plugin in your module's build file:
+
+  ```kotlin
+  // Add to your Android module build.gradle.kts
+  id("com.mikepenz.aboutlibraries.plugin.android")
+  ```
+
+  This modularization emphasizes explicit control over metadata export, improving build reliability and flexibility across platforms.
+
+- **Removal of `AndroidConfig` Class and Properties**
+  - The previous `AndroidConfig` class and its `registerAndroidTasks` property have been removed. Configuration related to Android build integration should now rely on the dedicated Android plugin.
+
+- **`LibraryColors` Interface Redesign**
+  - The interface was revamped for better descriptiveness and flexibility.
+  - Property renames:
+    - `backgroundColor` → `libraryBackgroundColor`
+    - `contentColor` → `libraryContentColor`
+  - New color variants were introduced for dialog backgrounds and content colors, enabling richer theming experiences.
+
+### Version 12.x Series
+
+- Renamed `nameTextStyles` to `nameTextStyle` within `LibraryTextStyles` to unify naming conventions.
+- Updated padding defaults by introducing a new `libraryPadding()` function replacing the older implementation, employing a dedicated class for chip padding holding.
+- Deprecated wrappers around `LibrariesContainer` in favor of `remember*` functions, moving towards more idiomatic Compose state management.
+- The `LicenseDialogBody` now accepts a `Modifier` parameter to embed padding directly in text composables rather than in scroll containers.
+- A series of APIs were deprecated to simplify the public interface and improve maintainability.
+
+### Version 12.0.0
+
+- Kotlin dependency was updated to version 2.1.20.
+- Compose UI underwent extensive API redesign:
+  - Simplified and consolidated many parameters.
+  - Provided more flexible configuration patterns for future feature expansions.
+- Gradle plugin configuration shifted to a property-based schema with nested configs.
+- Configuration collection types changed from arrays/lists to sets, enhancing data integrity and handling.
+- Introduced singular `outputPath` property for specifying metadata output locations.
+- Performed configuration-time setup of parts of the Gradle plugin to improve compatibility with Gradle's configuration cache.
+
+### Version 10.x.y
+
+- Major rewrite of the Gradle plugin:
+  - Transitioned from multiple XML string resource files to a single JSON metadata file (`aboutlibraries.json`).
+  - Deprecated old `enchant` config files.
+- UI module trimming to reduce overall complexity and improve maintainability.
+
+## Deprecated Features
+
+- Legacy Android UI components such as `LibsBuilder`, `LibsActivity`, and `LibsSupportFragment` are now marked for deprecation. Migration to Compose UI components (`LibrariesContainer`, `LibrariesScaffold`) is strongly recommended for new development.
+- Wrappers and helpers around the `LibrariesContainer` that abstract metadata consumption are deprecated; direct use of stateful `rememberLibraries` APIs is recommended.
+
+## Deprecated API Highlights
+
+- Change from `bindView(VH holder)` to `bindView(ViewHolder holder, List payloads)` in item adapters, enabling more efficient item updates.
+- Deprecated various properties and classes related to text styling and padding, replaced with more flexible and descriptive equivalents.
+
+## Removed Features
+
+- The previously all-in-one Gradle plugin now requires explicit application of either the base or Android-specific plugin.
+- The `AndroidConfig` class and certain build property flags related to Android task registration have been removed.
+
+## Impact Summary and Migration Guidance
+
+The restructure of the Gradle plugin and UI APIs demands attention during upgrades:
+
+- **Migration to the new Plugin Model**
+  1. Remove any old plugin declarations.
+  2. Add either `com.mikepenz.aboutlibraries.plugin` for manual control or `com.mikepenz.aboutlibraries.plugin.android` for automatic Android integration.
+  3. Adjust build scripts accordingly to call `exportLibraryDefinitions` explicitly if using the manual plugin.
+
+- **Compose UI Migration**
+  - Transition to `LibrariesContainer` and supporting Compose APIs.
+  - Replace deprecated wrappers with `rememberLibraries` calls.
+  - Update UI theming to align with new `LibraryColors` interface.
+
+- **Adapter API Adjustments**
+  - Adapt your item adapters to the new `bindView(ViewHolder, List payloads)` pattern to gain incremental UI update optimizations.
+
+- **Styling and Padding Changes**
+  - Replace old padding setups with the new dedicated padding classes and helper functions.
+
+<Tip>
+To ensure smooth migration, consult the Upgrade Notes in `MIGRATION.md` located in the repository root for detailed version-specific instructions and code samples.
+</Tip>
+
+## Troubleshooting Common Upgrade Issues
+
+- **Metadata Not Generating Automatically on Android**
+  - Confirm that you have applied the Android-specific Gradle plugin (`com.mikepenz.aboutlibraries.plugin.android`).
+  - If using the base plugin, ensure you invoke `exportLibraryDefinitions` manually.
+
+- **Compile Errors Related to Deprecated APIs**
+  - Review item adapter implementations to match the new `bindView` signature.
+  - Verify all references to `AndroidConfig` or related classes are removed.
+
+- **Theme and Color Mismatches in Compose UI**
+  - Check that your custom `LibraryColors` implementations use the new properties.
+  - Update any overrides or theme adjustments according to the latest Compose customization guidelines.
+
+## Additional Resources
+
+- [Migration.md in the repository](https://github.com/mikepenz/AboutLibraries/blob/main/MIGRATION.md) — Detailed upgrade guide with code examples.
+- [Compose UI Customization Guide](https://docs.aboutlibraries.com/guides/advanced-integration/compose-customization) — Learn how to adapt to the revamped UI APIs.
+- [Plugin Tasks & Configuration Extension Reference](https://docs.aboutlibraries.com/api-reference/gradle-plugin-api/plugin-tasks-and-configuration) — Understand the new plugin tasks.
+- [Legacy View API Deprecation Notices](https://docs.aboutlibraries.com/api-reference/legacy-view-api/legacy-libs-builder) — Information about deprecated UI components.
+
+## Conclusion
+
+This page serves as your authoritative checkpoint when upgrading AboutLibraries. It clearly highlights breaking points, deprecated paths, and removed features so you can preemptively plan your migration, avoid runtime issues, and leverage new architecture and APIs for a more stable and maintainable integration.
+
+Feel empowered to review, refactor, and adopt the latest improvements with confidence.
+
+---
+
+<AccordionGroup title="Version-Specific Breaking Changes">
+<Accordion title="Version 13.0.0">
+- Plugin split into base and Android plugins
+- Deprecated AndroidConfig class removal
+- LibraryColors interface redesign
+- Manual control over metadata export
+</Accordion>
+<Accordion title="Version 12.x">
+- API renames (e.g., text style properties)
+- Padding conventions updated
+- Deprecated Compose wrappers and extended dialog styling
+</Accordion>
+<Accordion title="Version 10.x">
+- Major Gradle plugin rewrite to JSON-only metadata
+- Deprecated old XML-based metadata formats
+- UI simplifications
+</Accordion>
+</AccordionGroup>
+
+<Accordion title="Sample: Applying the Android Gradle Plugin">
+```kotlin
+plugins {
+  id("com.mikepenz.aboutlibraries.plugin.android")
+  // your other plugins
+}
+```
+</Accordion>
+
+<Accordion title="Sample: Using New Binding Signature in Adapters">
+```kotlin
+override fun bindView(holder: ViewHolder, payloads: List<Any>) {
+  if (payloads.isEmpty()) {
+      super.bindView(holder)
+  } else {
+      // Partial update logic
+  }
+}
+```
+</Accordion>
+
+<Warning>
+Failing to adapt to these breaking changes may result in build errors, missing metadata at runtime, or styling inconsistencies.
+Ensure you carefully review your plugin setup and UI component usage after upgrading.
+</Warning>
+
+---
+
+## Support and Feedback
+
+For unresolved issues or questions related to migration, please refer to the [GitHub issues page](https://github.com/mikepenz/AboutLibraries/issues) or join the community discussions.
+
+Your proactive adoption of these changes enables AboutLibraries to continue evolving with modern frameworks and build best practices.
+
+Thank you for using AboutLibraries.

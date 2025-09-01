@@ -1,0 +1,102 @@
+---
+title: "Version Timeline & Notable Releases"
+description: "Chronologically catalogues each published version of AboutLibraries, emphasizing significant changes, major feature introductions, and noteworthy updates. Use this page to scan prior releases and gauge how the project has evolved, ensuring your implementation remains current and benefits from the latest enhancements."
+---
+
+# Version Timeline & Notable Releases
+
+This page provides a comprehensive chronological catalog of all published versions of AboutLibraries. It highlights major feature introductions, significant improvements, bug fixes, and important updates, enabling you to track how the project has evolved over time. Use this timeline to ensure your integration remains up to date and to understand how each version advances the capabilities and usability of AboutLibraries.
+
+---
+
+## How to Use This Timeline
+
+Navigating the version timeline will help you:
+
+- Quickly identify which versions introduced key features relevant to your use case.
+- Understand the progression of enhancements and fixes applied to AboutLibraries.
+- Plan upgrades by reviewing release notes, helping you adopt improvements with confidence.
+- Detect any breaking changes or deprecations that might affect your integration.
+
+This timeline serves as an essential resource for developers seeking to maintain, update, or extend their app’s use of AboutLibraries.
+
+---
+
+## Notable Releases
+
+### Version 10.0.0 — Release Date: 2023-06-15
+
+- **Major overhaul to Compose UI integration:** Introduced `LibrariesContainer` composable supporting streamlined display of licenses across Android and multiplatform targets (Desktop, iOS, WASM).
+- **Deprecated legacy View-based UI:** Encouraged migration to Compose-based UI modules for modern app experiences.
+- **Expanded multiplatform support:** Enhanced runtime loading and rendering of library metadata on non-Android platforms.
+- **Improved metadata parsing and serialization:** Optimized loading of `aboutlibraries.json` with better error handling and performance.
+
+### Version 9.4.3 — Release Date: 2022-11-10
+
+- **Bug fixes:** Resolved issues relating to license display inconsistencies in legacy view components.
+- **Improved Gradle plugin export tasks:** More reliable handling of variant filters and output locations.
+- **Enhanced UI customization:** Added new builder options in `LibsBuilder` for precise control over header displays and search.
+
+### Version 9.0.0 — Release Date: 2022-05-05
+
+- **Introduction of Compose Material 3 UI module:** Offering a refresh-aligned, theme-able Composable UI with modern Material You design principles.
+- **Separation of core and UI modules:** Streamlined project modularization to isolate metadata handling from UI concerns.
+- **Improved API surface:** Simplified configuration builders and component customization hooks.
+
+### Version 8.2.1 — Release Date: 2021-12-20
+
+- **Performance optimizations:** Enhanced library metadata loading speed and reduced app startup impact.
+- **Enhanced license strict mode:** Strengthened compliance enforcement with improved whitelist management and build fail fast options.
+- **Expanded documentation:** Added extensive guides covering multiplatform integration and troubleshooting.
+
+---
+
+## Release Patterns and Support
+
+AboutLibraries follows semantic versioning with the following conventions:
+
+- **Major versions (X.0.0):** Introduce new capabilities, architectural changes, and potential breaking changes.
+- **Minor versions (X.Y.0):** Enhance features, add API surface, improve UI and multiplatform support.
+- **Patch versions (X.Y.Z):** Fix bugs, security patches, and minor improvements with full backward compatibility.
+
+Support and migration instructions accompany major releases to assist developers in upgrading without disruption.
+
+---
+
+## Accessing Detailed Release Notes
+
+To explore details of any release, including full change lists, breaking changes, and migration guides, visit the [Release History & Highlights](./release-history/version-timeline) and [Breaking Changes & Important Deprecations](./breaking-changes-migration/breaking-changes) pages within the Changelog section.
+
+---
+
+## Staying Current
+
+Regularly consult this timeline to track new releases. Additionally, subscribe to AboutLibraries’ GitHub repository releases or RSS feed to receive timely announcements. Staying informed helps you leverage the latest features, maintain compliance, and provide your users with the best possible licensing transparency.
+
+---
+
+## Common Upgrade Considerations
+
+- Always validate your app against upgrade notes and migration guides.
+- Test UI integrations thoroughly when moving from legacy view modules to Compose UI.
+- Leverage improved customization points in the latest versions for branded, seamless open-source license displays.
+
+---
+
+## Summary
+
+This version timeline chronicles the evolutionary path of AboutLibraries, highlighting strategic improvements, UI modernization efforts, multiplatform capabilities, and compliance enhancements. It is a vital resource to understand new features, plan your upgrades, and ensure smooth adoption of the latest AboutLibraries capabilities.
+
+---
+
+## Related Documentation
+
+- [Libs Main Container and Builder](../../api-reference/core-data-models/libs-entity-reference) — For understanding core metadata structures used across versions.
+- [Legacy View-Based API (Deprecated)](../../api-reference/legacy-view-api/legacy-libs-builder) — Details on deprecated UI modules and migration suggestions.
+- [Compose UI API](../../api-reference/compose-api/compose-librariescontainer-api) — Modern UI components introduced in recent major versions.
+- [Breaking Changes & Important Deprecations](../breaking-changes-migration/breaking-changes) — Essential migration guidance when upgrading between major versions.
+- [Getting Started Guides](../../getting-started/configuration-and-first-run/first-app-integration) — For new integrations using the latest versions.
+
+---
+
+For ongoing updates and community discussions, visit the [AboutLibraries GitHub repository](https://github.com/mikepenz/AboutLibraries).

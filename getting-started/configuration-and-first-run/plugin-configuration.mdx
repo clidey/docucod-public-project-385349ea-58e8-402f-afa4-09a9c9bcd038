@@ -1,0 +1,374 @@
+---
+title: "Plugin Configuration"
+description: "Covers the essential AboutLibraries Gradle plugin configuration options, including specifying output paths for metadata, enabling offline mode, fetching remote licenses or funding, and setting up license compliance rules. Includes sample configuration blocks and common scenarios like monorepos or multiplatform builds."
+---
+
+# Plugin Configuration
+
+Configure the AboutLibraries Gradle plugin to tailor the generation of dependency and license metadata exactly to your project needs. This page outlines essential plugin options, including metadata output paths, offline mode settings, remote data fetching, license compliance, and handling complex scenarios like monorepos and multiplatform builds.
+
+---
+
+## 1. Enabling the Plugin
+
+The primary plugin ID is `com.mikepenz.aboutlibraries.plugin`. Use one of the following approaches in your Gradle build scripts:
+
+### Plugins DSL - Multiplatform or Manual Usage
+
+```kotlin
+// In root build.gradle.kts
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin") version "13.0.0-b01" apply false
+}
+
+// In app or module build.gradle.kts
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin")
+}
+```
+
+### Android-specific Plugin
+
+If your project is Android-only and you want automatic metadata generation integrated with the Android build lifecycle, apply:
+
+```kotlin
+// app build.gradle.kts
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin.android")
+}
+```
+
+The Android variant automatically hooks into your build, generating metadata without any manual task execution.
+
+---
+
+## 2. Plugin Configuration Block
+
+Customize the behaviour of the plugin using the `aboutLibraries` extension inside your module's `build.gradle.kts` file. Below is an annotated example showing essential options:
+
+```kotlin
+aboutLibraries {
+    collect {
+        // Path to override the directory with additional configs like extra libraries/licenses, relative to the module path
+        configPath = file("../config")
+
+        // Set to true to skip all network calls for remote license or funding fetches (offline mode)
+        offlineMode = false
+
+        // Optional GitHub API token for increasing rate limits when fetching license and funding information remotely
+        gitHubApiToken = if (hasProperty("github.pat")) property("github.pat")?.toString() else null
+
+        // Enable fetching detailed license information from supported remote repositories (requires GitHub token)
+        fetchRemoteLicense = false
+
+        // Enable fetching funding info from remote APIs (e.g. GitHub Sponsors, requires token)
+        fetchRemoteFunding = false
+
+        // Filter only specific build variants for dependency collection (e.g., "debug", "release")
+        // filterVariants.addAll("release")
+
+        // Include `platform` dependencies in the metadata output
+        includePlatform = true
+    }
+
+    export {
+        // The output destination for the generated aboutlibraries.json metadata file
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+
+        // Enable pretty-printing of the JSON output for human readability
+        prettyPrint = true
+
+        // Globally exclude sensitive or unnecessary fields from the output
+        excludeFields.addAll("License.name", "developers", "funding")
+    }
+
+    exports {
+        // Define variant-specific export outputs for multiplatform projects
+        create("jvm") {
+            outputFile = file("files/jvm/aboutlibraries.json")
+        }
+        create("wasmJs") {
+            outputFile = file("files/wasmJs/aboutlibraries.json")
+        }
+    }
+
+    license {
+        // Strict license compliance mode enforcement (FAIL | WARN | OFF)
+        strictMode = com.mikepenz.aboutlibraries.plugin.StrictMode.FAIL
+
+        // Set of globally allowed license IDs to whitelist
+        allowedLicenses.addAll("Apache-2.0", "MIT")
+
+        // Per-license allowed dependencies mappings, preventing build failures
+        allowedLicensesMap = mapOf(
+            "NOASSERTION" to listOf("org.jetbrains.kotlinx"),
+            "asdkl" to listOf("androidx.jetpack.library")
+        )
+
+        // Always include full license text for these IDs, even if no dependencies use them
+        // additionalLicenses.addAll("mit", "mpl_2_0")
+    }
+
+    library {
+        // Handle duplicate libraries either by MERGE or LINK mode
+        duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
+
+        // Rule to detect duplicates - SIMPLE or FULL
+        duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+    }
+}
+```
+
+<Check>
+Ensure your output file paths and `configPath` are correctly set relative to the respective module. Avoid using parent folders of modules as config paths to prevent issues.
+</Check>
+
+---
+
+## 3. Key Configuration Parameters Explained
+
+| Option                  | Description                                                                                       | Default                         |
+|-------------------------|-------------------------------------------------------------------------------------------------|--------------------------------|
+| `configPath`            | Directory for extra library/license JSON files to override or add the dependency metadata        | N/A                            |
+| `offlineMode`           | Disables all external network requests (for license or funding fetching)                         | `false`                        |
+| `gitHubApiToken`        | GitHub Personal Access Token for API request rate limit increase                                | `null`                         |
+| `fetchRemoteLicense`    | Enable fetching detailed license data from GitHub and supported repos                            | `false`                       |
+| `fetchRemoteFunding`    | Enable fetching funding info (e.g., GitHub Sponsors)                                            | `false`                       |
+| `filterVariants`        | List of Gradle build variants (e.g., `debug`, `release`) to collect dependencies for            | collects all variants          |
+| `includePlatform`       | Whether to include platform (`platform`) dependencies in metadata                                | `true`                        |
+| `export.outputFile`     | File path for the generated `aboutlibraries.json` file                                          | Recommended path per target   |
+| `export.prettyPrint`    | JSON output format: pretty printed or compact                                                   | `false`                       |
+| `license.strictMode`    | License compliance enforcement level (`FAIL`, `WARN`, `OFF`)                                   | `OFF`                         |
+| `license.allowedLicenses` | Global whitelist of license IDs that will not cause build failure                               | Empty by default              |
+| `license.allowedLicensesMap` | Map of license ID keys to lists of specific allowed dependency IDs                          | Empty by default              |
+| `library.duplicationMode` | Strategy to handle duplicate libraries (`MERGE` or `LINK`)                                    | `MERGE`                      |
+| `library.duplicationRule` | Rule complexity to detect duplicates (`SIMPLE` or `FULL`)                                     | `SIMPLE`                      |
+
+---
+
+## 4. Common Configuration Scenarios
+
+### 4.1 Monorepo or Multi-module Projects
+
+If you work in a monorepo with multiple subprojects, apply the plugin and configure common settings in your root project, or use per-module overrides to set variant-specific output files or config paths.
+
+Example root level common config:
+
+```kotlin
+subprojects {
+    apply(plugin = "com.mikepenz.aboutlibraries.plugin")
+
+    aboutLibraries {
+        collect {
+            configPath = file("../config")
+            offlineMode = false
+        }
+
+        export {
+            prettyPrint = true
+            outputFile = file("src/main/resources/aboutlibraries.json")
+        }
+    }
+}
+```
+
+Individual modules can customize `outputFile` or enable remote fetching as needed.
+
+### 4.2 Multiplatform Build and Variant-specific Output
+
+Use the `exports` block inside `aboutLibraries` to specify separate output files for different build variants or platforms, ensuring metadata is generated for each target:
+
+```kotlin
+aboutLibraries {
+    exports {
+        create("desktop") {
+            outputFile = file("src/desktopMain/composeResources/files/aboutlibraries.json")
+            prettyPrint = true
+        }
+
+        create("wasmJs") {
+            outputFile = file("src/wasmJsMain/composeResources/files/aboutlibraries.json")
+            prettyPrint = true
+        }
+    }
+}
+```
+
+This makes it easy to manage multiplatform metadata generation cleanly.
+
+### 4.3 Offline Mode
+
+When enabled, offline mode disables all remote network checks and API calls during metadata collection.
+
+```kotlin
+aboutLibraries {
+    collect {
+        offlineMode = true
+    }
+}
+```
+
+Use offline mode in CI environments without internet access or to speed up builds when unchanged.
+
+---
+
+## 5. Modifying Libraries, Licenses, and Funding Metadata
+
+Place JSON files inside the directories configured via `configPath` under:
+
+- `libraries/`: Override or add library entries
+- `licenses/`: Override license text or metadata
+- `funding/`: Add or update funding information
+
+Example library JSON snippet:
+
+```json
+{
+  "uniqueId": "com.mikepenz:materialdrawer",
+  "name": "Custom MaterialDrawer",
+  "description": "Extended Drawer library",
+  "website": "https://github.com/mikepenz/MaterialDrawer",
+  "developers": [
+    {"name": "Mike Penz", "organisationUrl": "https://mikepenz.dev"}
+  ]
+}
+```
+
+Run the `exportFunding` Gradle task to generate funding info automatically from remote sources (requires GitHub token):
+
+```bash
+./gradlew :app:exportFunding
+```
+
+This writes the funding JSON file to the configured `funding` directory.
+
+---
+
+## 6. License Compliance Rules
+
+Use the `license` block to enforce strict license compliance during builds. This helps avoid incorporating dependencies with disallowed licenses.
+
+- Set `strictMode` to `FAIL` to break builds on violations
+- Use `allowedLicenses` to whitelist accepted license identifiers globally
+- Use `allowedLicensesMap` to allow specific licenses for certain dependencies only
+
+Example:
+
+```kotlin
+license {
+    strictMode = com.mikepenz.aboutlibraries.plugin.StrictMode.FAIL
+    allowedLicenses.addAll("Apache-2.0", "MIT")
+    allowedLicensesMap = mapOf(
+        "NOASSERTION" to listOf("org.jetbrains.kotlinx")
+    )
+}
+```
+
+> **Note:** License strict mode build failure only triggers automatically in Android projects using the Android-specific plugin. For other platforms, run export tasks manually to check compliance.
+
+---
+
+## 7. Handling Duplicate Libraries
+
+Configure how the plugin merges or links duplicate dependency entries detected by the analysis:
+
+```kotlin
+library {
+    duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
+    duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+}
+```
+
+- `duplicationMode`:
+  - `MERGE`: Combine duplicate entries into a single record
+  - `LINK`: Link duplicates to prevent info loss
+
+- `duplicationRule`:
+  - `SIMPLE`: Basic matching by identifiers
+  - `FULL`: More exhaustive matching
+
+Choose settings appropriate for your dependency graph complexity.
+
+---
+
+## 8. Verifying Your Configuration
+
+After updating the plugin configuration, generate the metadata file manually for non-Android projects or to confirm settings:
+
+```bash
+# Generate library metadata to configured outputFile
+./gradlew :app:exportLibraryDefinitions
+
+# Override outputFile and build variant if needed
+./gradlew :app:exportLibraryDefinitions -PaboutLibraries.outputFile=src/main/resources/custom_aboutlibraries.json -PaboutLibraries.exportVariant=release
+```
+
+For Android projects with the Android plugin applied, metadata generation happens automatically on build.
+
+---
+
+## 9. Troubleshooting
+
+<AccordionGroup title="Common Configuration Issues">
+<Accordion title="Incorrect Config Path or Output File Paths">
+Ensure that `configPath` and `export.outputFile` are correctly set relative to each module. Using parent module folders for `configPath` can break processing.
+</Accordion>
+<Accordion title="License Compliance Build Failures">
+Check if `strictMode` is set to `FAIL` and ensure your dependencies have allowed licenses via global or whitelist maps.
+</Accordion>
+<Accordion title="GitHub API Rate Limits or Missing Token">
+Without a valid `gitHubApiToken`, calls to fetch remote licenses or funding will fail. Provide a token as a Gradle property or environment variable.
+</Accordion>
+<Accordion title="No Metadata Output Generated">
+Confirm you applied the plugin correctly and run the `exportLibraryDefinitions` Gradle task manually. For Android plugin, verify that the Android build has executed at least once.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 10. Next Steps
+
+- Proceed to [Generating Library Metadata](/getting-started/configuration-and-first-run/generate-metadata) to learn how to run the export tasks
+- Explore [First App Integration and Usage](/getting-started/configuration-and-first-run/first-app-integration) to consume the generated metadata
+- Review [Compliance and License Strict Mode](/guides/best-practices-workarounds/compliance-and-license-strict-mode) for finer control on legal compliance
+
+
+---
+
+For full API details and latest updates, consult the [AboutLibraries Gradle Plugin API Reference](https://github.com/mikepenz/AboutLibraries/blob/main/plugin-build/plugin/src/main/kotlin/com/mikepenz/aboutlibraries/plugin/AboutLibrariesExtension.kt).
+
+---
+
+<Info>
+The Gradle Plugin supports both manual task execution and automatic Android integration. Choose the best fit for your project's complexity and build environment.
+</Info>
+
+<Info>
+Always commit your generated `aboutlibraries.json` file to your version control system if you prefer to avoid generating it on CI or during development builds.
+</Info>
+
+---
+
+### Example: Minimal plugin configuration for a JVM module
+
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin")
+}
+
+aboutLibraries {
+    collect {
+        configPath = file("../config")
+        offlineMode = false
+    }
+
+    export {
+        outputFile = file("src/main/resources/aboutlibraries.json")
+        prettyPrint = true
+    }
+}
+```
+
+This sets up basic library metadata generation with sane defaults.
+
+---

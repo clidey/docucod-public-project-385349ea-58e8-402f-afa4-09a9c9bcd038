@@ -1,0 +1,218 @@
+---
+title: "Advanced Gradle Plugin Tasks and Automation"
+description: "Practical guide to leveraging advanced Gradle commands: exporting compliance reports, listing libraries, exporting funding, and integrating these with your continuous integration pipelines."
+---
+
+# Advanced Gradle Plugin Tasks and Automation
+
+## Overview
+This guide provides a practical workflow to leverage the advanced Gradle plugin tasks offered by AboutLibraries. It targets users who want to automate and customize their library metadata generation, export compliance reports, list libraries in various formats, extract funding information, and integrate these tasks into continuous integration (CI) pipelines.
+
+By following this guide, you will have a reliable, repeatable process for producing comprehensive dependency metadata and compliance artifacts suited for legal reviews, audit automation, or custom reporting.
+
+---
+
+## Prerequisites
+
+- Your project must include and apply the `com.mikepenz.aboutlibraries.plugin` Gradle plugin (or `com.mikepenz.aboutlibraries.plugin.android` for Android auto-generation).
+- Basic understanding of Gradle command execution.
+- Configured `aboutLibraries` extension in your build script defining paths and options as needed.
+- Optionally have a GitHub API token if remote license or funding fetching is desired.
+
+---
+
+## Expected Outcome
+
+- Metadata JSON files describing all third-party libraries and licenses.
+- Exported CSV or text files with compliance data.
+- Lists of all libraries printed in terminal or saved for audit.
+- Funding data files indicating library sponsors/maintainers.
+- Integration of these tasks into CI workflow for automatic enforcement and reporting.
+
+
+## Time Estimate
+
+Completing setup and running exports takes 10-20 minutes depending on project size;
+full CI integration time varies by environment.
+
+## Difficulty Level
+
+Intermediate: Requires Gradle knowledge and build config editing.
+
+---
+
+# Step-by-Step Instructions
+
+### 1. Apply and Configure AboutLibraries Gradle Plugin
+
+Ensure the plugin is declared in your module `build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin")
+    // Or for Android projects
+    // id("com.mikepenz.aboutlibraries.plugin.android")
+}
+
+aboutLibraries {
+    collect {
+        configPath = file("../config") // Optional override for additional library metadata and licenses
+        gitHubApiToken = project.findProperty("github.pat")?.toString() // Optional
+        fetchRemoteLicense = false
+        fetchRemoteFunding = false
+    }
+
+    export {
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+        prettyPrint = true
+        // variant = "release" // Optional variant filter
+    }
+
+    license {
+        strictMode = com.mikepenz.aboutlibraries.plugin.StrictMode.FAIL
+        allowedLicenses.addAll("Apache-2.0", "MIT")
+    }
+
+    library {
+        duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
+        duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+    }
+}
+```
+
+This configuration enables generating metadata during manual Gradle task execution.
+
+### 2. Generate Library Metadata JSON
+
+To manually create the `aboutlibraries.json` file which contains all collected dependencies and license metadata, run:
+
+```bash
+./gradlew :app:exportLibraryDefinitions
+```
+
+- Use the `-PaboutLibraries.outputFile=<path>` to override output path.
+- Use `-PaboutLibraries.exportVariant=<variantName>` to filter specific build variants if needed.
+
+
+### 3. Export Lists of Libraries
+
+To output a straightforward list of all libraries found, use:
+
+```bash
+./gradlew :app:exportLibraries
+```
+
+- This exports library details in formats useful for compliance reporting.
+- Variant-specific tasks exist, like `exportLibrariesRelease` if variants defined.
+
+Also, to simply print a list of libraries without exporting files, run:
+
+```bash
+./gradlew :app:findLibraries
+```
+
+It outputs dependencies with their name, version, and unique ID to the console.
+
+### 4. Export Compliance Reports
+
+Compliance reports summarize licensed dependencies, ready for legal review:
+
+```bash
+./gradlew :app:exportComplianceLibrariesRelease -PaboutLibraries.exportPath=complianceReport/
+```
+
+- This generates CSV and TXT summary files and a `dependencies` directory under the specified path.
+- Reports include license names, URLs, and other relevant details.
+
+### 5. Export Funding Information
+
+To gather and export funding information (e.g., sponsors, donation links) for your libraries, run:
+
+```bash
+./gradlew :app:exportFunding
+```
+
+- Requires GitHub API token configured for increased API limits.
+- Exports JSON funding metadata into `funding` directory under the configured config path.
+- Automatically overwrites existing funding files.
+
+### 6. Integrate Tasks into CI Pipelines
+
+Automate generation and compliance enforcement as part of your CI by adding these commands:
+
+```bash
+./gradlew exportLibraryDefinitions
+./gradlew exportComplianceLibrariesRelease
+```
+
+- Fail builds on license violations if strict mode is enabled.
+- Commit generated JSON files to version control as artifacts.
+- Use compliance reports for audit and verification.
+
+### 7. Customize Export Options
+
+Modify the `aboutLibraries` extension in your Gradle script to tweak behavior:
+
+- Change output locations (`export.outputFile`, `exports.create { ... }`).
+- Control pretty print of JSON.
+- Filter build variants.
+- Exclude specific fields from exports.
+
+---
+
+# Practical Examples
+
+### Example: Export Metadata and Compliance Report
+
+```bash
+# Export library data
+./gradlew app:exportLibraryDefinitions
+
+# Export compliance report to complianceReport folder
+./gradlew app:exportComplianceLibrariesRelease -PaboutLibraries.exportPath=complianceReport/
+```
+
+### Example: Print Library List to Console
+
+```bash
+./gradlew app:findLibraries
+```
+
+Expected output snippet:
+
+```
+Name: OkHttp, Version: 4.9.3, Unique ID: com.squareup.okhttp3:okhttp
+Name: Kotlinx Coroutines, Version: 1.6.0, Unique ID: org.jetbrains.kotlinx:kotlinx-coroutines-core
+```
+
+---
+
+# Troubleshooting & Tips
+
+### Common Issues
+
+- **Missing Metadata File**: Ensure `exportLibraryDefinitions` task runs successfully before UI runtime integration.
+- **No Output or Empty Reports**: Verify correct module path and plugin application; check variant filters.
+- **API Rate Limit Errors**: Provide GitHub personal access token in `gitHubApiToken`.
+- **Build Does Not Fail on License Issues**: Strict mode works automatically only with Android plugin; for others, run `exportLibraryDefinitions` manually.
+- **Funding Export Overwrites Files**: Place existing funding customizations outside the auto-generated folder.
+
+### Best Practices
+
+- Regularly run `exportLibraryDefinitions` in your CI.
+- Commit generated JSON files for traceability.
+- Review compliance reports before release.
+- Customize `allowedLicenses` and `allowedLicensesMap` to prevent build failures.
+- Use variant-specific exports for multi-flavor projects.
+
+---
+
+# Next Steps & Related Resources
+
+- [Generating Library Metadata](../getting-started/configuration-and-first-run/generate-metadata.md): Deeper dive into metadata generation.
+- [First App Integration and Usage](../getting-started/configuration-and-first-run/first-app-integration.md): Load generated data into your app UI.
+- [Compliance and License Strict Mode Guide](../guides/best-practices-workarounds/compliance-and-license-strict-mode.md): Enforce license compliance rigorously.
+- [Visualizing Libraries in Your App](../guides/getting-started/visualizing-libraries.md): Display licenses and library data using Compose.
+- [Modifying Library, License, and Funding Information](../guides/advanced-integration/modifying-library-license-info.md): Customize metadata content and override defaults.
+
+By mastering these advanced Gradle plugin tasks, you automate at-scale compliance, improve transparency, and streamline open-source audits.

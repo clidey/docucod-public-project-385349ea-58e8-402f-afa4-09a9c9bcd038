@@ -1,0 +1,202 @@
+---
+title: "Generating Library Metadata"
+description: "Guides users to trigger the library definition export tasks (`exportLibraryDefinitions`) for various targets (Android, Desktop, Wasm, iOS) and describes where to place the generated `aboutlibraries.json` file for automatic or manual loading. Explains CI/CD workflows and how to commit/scm the metadata for reproducible builds."
+---
+
+# Generating Library Metadata
+
+This guide walks you through triggering the export of library definition metadata (`exportLibraryDefinitions`) for various target platforms — Android, Desktop, Wasm, and iOS. It also explains how to properly place or commit the generated `aboutlibraries.json` file for automatic or manual loading in your app runtime environment. Finally, it covers how this process fits into common CI/CD workflows for reproducible and consistent builds.
+
+---
+
+## 1. Understanding Library Metadata Generation
+
+AboutLibraries collects detailed information about your project dependencies—including licenses, developer info, project URLs, and more—into a structured JSON file called `aboutlibraries.json`. The generation of this metadata is handled by the Gradle plugin’s `exportLibraryDefinitions` task.
+
+This metadata serves as the authoritative source for license compliance and attribution at runtime. Each supported platform requires triggering this export appropriately, and positioning the generated file so the runtime library code can find and consume it.
+
+---
+
+## 2. Prerequisites
+
+Before proceeding, ensure:
+
+- You have added the AboutLibraries Gradle plugin to your build script.
+- Your project uses Gradle and supports Kotlin Multiplatform or Android targets.
+- Your build environment can run Gradle tasks for the specific target platform.
+- For CI/CD usage, your repository allows you to commit or cache the generated `aboutlibraries.json` file.
+
+Refer to the [Install the Gradle Plugin](../prerequisites-installation/install-gradle-plugin) page for detailed setup instructions.
+
+---
+
+## 3. Triggering the Library Definition Export
+
+### 3.1 Export Task Overview
+
+The Gradle plugin exposes a task called `exportLibraryDefinitions` that generates the `aboutlibraries.json` file. You can invoke this task manually or automate it within your build system.
+
+Running the task for a specific module and platform looks like this:
+
+```bash
+./gradlew :<module>:exportLibraryDefinitions
+```
+
+or specifying output location and variant explicitly:
+
+```bash
+./gradlew :<module>:exportLibraryDefinitions \
+  -PaboutLibraries.outputFile=path/to/aboutlibraries.json \
+  -PaboutLibraries.exportVariant=<variant>
+```
+
+### 3.2 Supported Export Targets
+
+The following targets are supported, either by default or via explicit configuration:
+
+- **Android** (default variant, or specified flavor/build type)
+- **JVM Desktop**
+- **Wasm (JavaScript WebAssembly)**
+- **iOS Targets** (via Kotlin Multiplatform native targets)
+
+### 3.3 Example: Export for Desktop JVM
+
+```bash
+./gradlew :app-desktop:exportLibraryDefinitions -PaboutLibraries.outputFile=src/main/resources/libraries.json
+```
+
+### 3.4 Example: Export for WASM Target
+
+```bash
+./gradlew :app-wasm:exportLibraryDefinitions \
+  -PaboutLibraries.outputFile=src/jsMain/resources/aboutlibraries.json \
+  -PaboutLibraries.exportVariant=wasmJs
+```
+
+### 3.5 Example: Export for Android Variant
+
+If not using the Android-specific plugin (which generates automatically), run:
+
+```bash
+./gradlew :app:exportLibraryDefinitions -PaboutLibraries.exportVariant=release
+```
+
+---
+
+## 4. Configuring Export Output Location
+
+By default, the plugin writes the `aboutlibraries.json` file to a typical resource location depending on platform conventions. However, you can override the output location using the build script configuration or command line parameter.
+
+### 4.1 Gradle DSL Configuration Example
+
+Add or update the `aboutLibraries` extension in your module’s `build.gradle.kts`:
+
+```kotlin
+aboutLibraries {
+    export {
+        // Define relative or absolute path where this JSON should be generated
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+
+        // Optional: specify variant explicitly here (overridden by CLI)
+        // variant = "release"
+
+        prettyPrint = true
+    }
+}
+```
+
+> If you specify a custom output location, the runtime modules (such as Compose Multiplatform) will not automatically discover the JSON file. You'll need to load it manually (see app integration guides).
+
+---
+
+## 5. Placement of the Generated `aboutlibraries.json`
+
+Where you place the generated JSON determines how the runtime accesses the metadata:
+
+| Platform           | Typical Location for `aboutlibraries.json`                                      | Loading Mechanism              |
+|--------------------|--------------------------------------------------------------------------------|-------------------------------|
+| Android            | `src/main/res/raw/aboutlibraries.json` or configured resource directory        | Loaded automatically by Android plugin  |
+| JVM Desktop        | `src/main/resources/aboutlibraries.json` or custom resources directory         | Loaded as resource stream     |
+| Wasm JS            | `src/jsMain/resources/aboutlibraries.json`                                    | Loaded via js resource APIs   |
+| Compose Multiplatform | `src/commonMain/composeResources/files/aboutlibraries.json`                  | Compose resources API/manual  |
+
+### 5.1 Automatic Loading
+
+For Android projects using `com.mikepenz.aboutlibraries.plugin.android`, the `aboutlibraries.json` is generated and included automatically in the APK’s raw resources.
+
+For desktop and other multiplatform targets, automatic loading requires placing the file in resource folders recognized by your build system.
+
+### 5.2 Manual Loading
+
+If you manage output locations manually (or use custom paths), you must load the JSON explicitly at runtime. For example, in Compose Multiplatform:
+
+```kotlin
+val libraries by rememberLibraries {
+    Res.readBytes("files/aboutlibraries.json").decodeToString()
+}
+```
+
+See the [First App Integration and Usage](../configuration-and-first-run/first-app-integration) guide for detailed loading examples.
+
+---
+
+## 6. Best Practices for CI/CD Integration
+
+Consistent library metadata across build environments is critical for reliable license compliance and transparency.
+
+### 6.1 Commit Generated Metadata to Source Control
+
+- Run `exportLibraryDefinitions` as part of your build or CI pipeline.
+- Commit the resulting `aboutlibraries.json` file into your source repository.
+- This ensures the runtime loads a known, reproducible snapshot of dependencies and licenses.
+
+### 6.2 Automate Metadata Generation
+
+Integrate export task into your CI workflow before building your app artifacts. Example snippet for a CI system:
+
+```bash
+./gradlew :app:exportLibraryDefinitions
+./gradlew :app:assembleRelease
+```
+
+### 6.3 Use Variant Filtering Where Applicable
+
+- If your app has multiple build variants (e.g., debug, release), explicitly specify the variant (`aboutLibraries.exportVariant`) to generate variant-specific metadata.
+
+### 6.4 Avoid Manual Edits to Generated Files
+
+- Modifications to `aboutlibraries.json` should be made upstream by changing Gradle dependency or plugin configuration (e.g., adding custom license overrides).
+
+---
+
+## 7. Troubleshooting Common Issues
+
+<AccordionGroup title="Troubleshooting Export and Metadata">
+<Accordion title="Task Does Not Generate the JSON File">
+Verify the plugin is applied correctly in your module’s build script. Check for logs or errors during the Gradle task execution. Confirm the output path is writable.
+</Accordion>
+<Accordion title="Generated File Not Found at Runtime">
+Ensure the JSON file is placed in a resource location accessible by your application. For Android, it should be in `res/raw`, for example. For multiplatform, confirm your resource loading code matches the output location.
+</Accordion>
+<Accordion title="Data Appears Incomplete or Missing Libraries">
+Make sure the Gradle dependencies are fully resolved for the export variant and that you have not disabled collection or filtering of platform dependencies.
+</Accordion>
+<Accordion title="Variant Selection Does Not Work">
+Explicitly specify the variant via the `aboutLibraries.exportVariant` property on the command line or in the build script.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 8. Additional Resources
+
+- [Setup the Gradle Plugin](../prerequisites-installation/install-gradle-plugin) — Installing and configuring the plugin.
+- [Plugin Configuration](../configuration-and-first-run/plugin-configuration) — Customize the export process.
+- [First App Integration and Usage](../configuration-and-first-run/first-app-integration) — Using the generated metadata in your app.
+- [API Reference for `Libs`](../../api-reference/core-data-models/libs-entity-reference) — Understanding the data model parsed from the JSON.
+
+For detailed examples and Gradle plugin reference, visit the [AboutLibraries GitHub Repository](https://github.com/mikepenz/AboutLibraries) and review the Gradle plugin README.
+
+---
+
+By following this guide, you ensure your app builds include precise, comprehensive, and reproducible dependency and license metadata. This foundation is essential for license compliance, user transparency, and seamless integration with AboutLibraries’ runtime UI components.

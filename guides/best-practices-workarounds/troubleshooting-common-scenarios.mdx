@@ -1,0 +1,240 @@
+---
+title: "Troubleshooting Common Scenarios"
+description: "Solutions and diagnostic steps for common issues, such as missing or incorrect license info, unexpected dependencies, native code caveats, and extending AboutLibraries for corner cases."
+---
+
+# Troubleshooting Common Scenarios
+
+Explore practical solutions and diagnostic steps for common issues encountered when using AboutLibraries, including missing or incorrect license information, unexpected dependencies, native code peculiarities, and extending the tool for edge cases.
+
+---
+
+## 1. Overview
+
+AboutLibraries aims to automate collection and display of all third-party dependency metadata, including licenses and funding. However, some frequent scenarios require manual intervention or understanding of internal behaviors to ensure accurate results and smooth integration.
+
+This guide addresses these situations with clear guidance to help you identify, fix, and extend your AboutLibraries setup effectively.
+
+**What you will achieve:**
+- Pinpoint common issues like missing licenses or unexpected dependencies.
+- Apply practical fixes for native code and dependency reporting.
+- Extend the library detection via JSON overrides for corner cases.
+
+**Prerequisites:**
+- Familiarity with AboutLibraries setup and metadata generation.
+- Access to your project’s Gradle configuration and plugin settings.
+- Basic knowledge of Android or multiplatform dependency management.
+
+**Estimated time:** About 15-30 minutes per troubleshooting case depending on complexity.
+
+**Difficulty:** Intermediate
+
+---
+
+## 2. Common Issues and Solutions
+
+### 2.1 Missing or Incorrect License Information
+
+**Problem:**
+Some dependencies appear with missing or generic license labels (e.g., "NOASSERTION") or show incorrect license names.
+
+**Why it happens:**
+- The dependency’s POM file or Gradle metadata lacks or has inaccurate license tags.
+- Remote license fetching is disabled or failing (GitHub token missing).
+- AboutLibraries could not fetch or map the license correctly.
+
+**How to fix:**
+1. **Verify your Gradle plugin configuration:**
+   - Ensure proper `configPath` is set to include any manual overrides.
+   - Consider enabling `fetchRemoteLicense` if relying on remote license fetching.
+   - Provide a valid GitHub API token to increase request limits.
+
+2. **Override license manually:**
+   - Create or update a license JSON override file inside your configured `configPath/licenses` folder.
+   - Include the full license text or correct SPDX identifier.
+
+3. **Override library license mapping:**
+   - In `configPath/libraries`, create or update the JSON file for the specific library.
+   - Specify the correct license IDs under the `licenses` field.
+
+4. **Strict mode considerations:**
+   - If using license strict mode (`license.strictMode`), add allowed licenses in the whitelist.
+
+**Example override snippet:**
+
+```json
+{
+  "uniqueId": "com.example:missing-lib",
+  "licenses": ["Apache-2.0"]
+}
+```
+
+
+<Tip>
+Always validate the license overrides against the actual license of the dependency to avoid compliance issues.
+</Tip>
+
+---
+
+### 2.2 Unexpected or Missing Dependencies
+
+**Problem:**
+Your AboutLibraries report shows unexpected dependencies or is missing native or indirect dependencies.
+
+**Why it happens:**
+- Compile-time dependencies included but runtime-only or native dependencies excluded (or vice versa).
+- Native sub-dependencies are not included by Gradle and thus not detected automatically.
+- Incorrect variant filtering or multiple variants included.
+
+**How to fix:**
+1. **Review `filterVariants`:**
+   - Configure `filterVariants` in the plugin to focus on specific build variants.
+
+2. **Manually add native dependencies:**
+   - Use `configPath` library JSON overrides to add missing native dependencies manually.
+
+3. **Validate dependencies with Gradle:**
+   - Use Gradle tasks like `findLibraries`, `exportLibraries` to confirm which dependencies are picked up.
+
+4. **Enable platform dependencies if needed:**
+   - Set `includePlatform = true` to include platform constraints that might bring in extra libraries.
+
+<Tip>
+Using Gradle’s dependency insight and AboutLibraries’ export tasks helps verify which dependencies the plugin processes and which it ignores.
+</Tip>
+
+---
+
+### 2.3 Native Code and ABI-Specific Dependencies
+
+**Problem:**
+Native libraries or ABI-specific dependencies are often missing or incorrectly attributed.
+
+**Cause:**
+- Native files (e.g., `.so`, `.dll`) are not published as Gradle dependencies but bundled as assets.
+- AboutLibraries relies on Gradle metadata; no coverage for native-only dependencies.
+
+**Solution:**
+1. **Manual additions:**
+   - Add native libraries explicitly to your `configPath/libraries` folder in JSON form with adequate descriptions.
+
+2. **Custom funding and license info:**
+   - Include funding or license details manually to match native components.
+
+3. **Audit your build:**
+   - Confirm native libraries are properly bundled to avoid missing runtime components.
+
+<Warning>
+Native dependencies require proactive management; AboutLibraries automation cannot detect these automatically due to Gradle limitations.
+</Warning>
+
+---
+
+### 2.4 Extending AboutLibraries for Corner Cases
+
+When you encounter libraries or dependencies not detected automatically or special cases that require additional metadata, you can extend AboutLibraries via JSON configuration overrides.
+
+**How to extend:**
+1. **Locate or create your `configPath` directory:**
+   - Defined in your Gradle plugin under `aboutLibraries.collect.configPath`.
+
+2. **Provide JSON files for libraries, licenses, or funding:**
+   - One JSON file per library or license.
+   - Use the `uniqueId` to match the library or license.
+
+3. **Merging and duplication modes:**
+   - Configure duplication mode (`LINK` or `MERGE`) to handle multiple entries of the same dependency across variants or sources.
+
+4. **Example manual library override:**
+
+```json
+{
+  "uniqueId": "com.example:customnative",
+  "name": "Custom Native Library",
+  "artifactVersion": "1.0.0",
+  "description": "This is a manually added native library.",
+  "licenses": ["Apache-2.0"],
+  "website": "https://example.com/native-library"
+}
+```
+
+5. **Rebuild and reload:**
+   - After adding overrides, regenerate metadata and reload your app to reflect changes.
+
+<Tip>
+Regularly review your overrides folder to keep metadata accurate and up-to-date as dependencies evolve.
+</Tip>
+
+---
+
+## 3. Diagnostic and Verification Steps
+
+You can follow this checklist to verify your AboutLibraries setup and resolve issues:
+
+<Steps>
+<Step title="Verify Plugin Configuration">
+Check your `build.gradle` plugin settings, especially `configPath`, `fetchRemoteLicense`, and GitHub token availability.
+</Step>
+<Step title="Check Generated Metadata">
+Inspect the generated `aboutlibraries.json` file for your dependencies and licenses.
+</Step>
+<Step title="Run Gradle Plugin Export Tasks">
+Use tasks like `exportLibraryDefinitions`, `exportLibraries`, and `findLibraries` to verify detection.
+</Step>
+<Step title="Add Manual Overrides if Needed">
+Create JSON overrides for problematic libraries or licenses in your config directory.
+</Step>
+<Step title="Rebuild Your Project and Validate UI">
+Trigger metadata regeneration, and verify the library list displays correctly in your app.
+</Step>
+</Steps>
+
+---
+
+## 4. Troubleshooting Tips
+
+### Errors Loading Metadata
+- **Error:** Unable to read library information at runtime.
+- **Fix:** Ensure your `aboutlibraries.json` is included in the correct resource folder (e.g., `res/raw` or `composeResources`).
+
+### Runtime License Display Glitches
+- Check for missing or null license entries. Manually override missing licenses.
+- Ensure `showLicense` is enabled in your `LibsBuilder`.
+
+### Duplicate Dependencies or Conflicts
+- Adjust duplication mode to `LINK` or `MERGE`.
+- Use exclusion rules or filters in your `aboutLibraries.library` config.
+
+### Remote License Fetch Fails
+- Provide a valid GitHub API token.
+- Enable `fetchRemoteLicense` to true.
+- Check network connectivity and GitHub API availability.
+
+---
+
+## 5. Best Practices
+
+- **Maintain ConfigPath overrides:** Keep manual JSON files up-to-date with project dependencies.
+- **Use License Strict Mode cautiously:** Balance strict license enforcement with practical overrides.
+- **Regularly audit dependencies:** Use Gradle plugin tasks to catch new or missing dependencies early.
+- **Cache tokens securely:** If using GitHub tokens for remote fetching, ensure they are safely stored.
+- **Test multiplatform behavior:** Check your metadata loading in all target platforms (Android, Desktop, WASM, etc.).
+
+---
+
+## 6. Next Steps & Related Content
+
+- Visit [Modifying Library, License, and Funding Information](../advanced-integration/modifying-library-license-info) to learn how to customize metadata in depth.
+- Review [Compliance and License Strict Mode](../best-practices-workarounds/compliance-and-license-strict-mode) to enforce license policies.
+- See [Generating Library Metadata](../../getting-started/configuration-and-first-run/generate-metadata) for more on export tasks.
+- Explore [First App Integration and Usage](../../getting-started/configuration-and-first-run/first-app-integration) for runtime usage details.
+
+---
+
+## 7. References
+
+- [Official AboutLibraries GitHub Repository](https://github.com/mikepenz/AboutLibraries)
+- [Gradle Plugin Configuration](../../getting-started/configuration-and-first-run/plugin-configuration)
+- [AboutLibraries Compose UI Documentation](../../api-reference/compose-api/compose-librariescontainer-api)
+
+---

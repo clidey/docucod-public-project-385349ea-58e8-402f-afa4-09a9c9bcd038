@@ -1,0 +1,299 @@
+---
+title: "LibrariesContainer & LibrariesScaffold"
+description: "API reference for the main Compose UI containers (LibrariesContainer and LibrariesScaffold). Learn to render library lists, inject custom headers/footers, and apply advanced styling, supporting both Android and multiplatform Compose deployments."
+---
+
+# LibrariesContainer & LibrariesScaffold
+
+This API reference details the main Compose UI components for rendering lists of third-party libraries and licenses using AboutLibraries in Android and multiplatform Compose applications. The core containers `LibrariesContainer` and `LibrariesScaffold` offer comprehensive support for displaying library metadata, enabling you to integrate polished license attributions with customizable headers, footers, styling, and interaction behaviors.
+
+---
+
+## Overview
+
+`LibrariesContainer` serves as the foundational Compose UI element to display a scrollable, interactive list of third-party libraries discovered by AboutLibraries. It handles the rendering of library names, authors, versions, license badges, funding badges, and optional descriptive details.
+
+`LibrariesScaffold` enhances this by providing a Material Design scaffold structure wrapping the `LibrariesContainer`, simplifying the creation of a full library screen including app bars and system padding.
+
+Together, these components form the heart of the AboutLibraries Compose UI integration across Android and multiplatform targets (Desktop, iOS, WASM).
+
+---
+
+## Getting Started
+
+To start rendering your libraries, you first need to load the library metadata using the `rememberLibraries` helper function, which asynchronously loads and parses your `aboutlibraries.json` metadata file into the `Libs` data model.
+
+The simplest usage:
+
+```kotlin
+@Composable
+fun MyLibrariesScreen() {
+    val libraries by rememberLibraries {
+        // Load the aboutlibraries.json file content as String
+        loadJsonFromAssets("aboutlibraries.json")
+    }
+    LibrariesContainer(
+        libraries = libraries,
+        modifier = Modifier.fillMaxSize()
+    )
+}
+```
+
+This will display a plain list of libraries with default styling and behavior.
+
+---
+
+## LibrariesContainer
+
+### Purpose
+
+The `LibrariesContainer` composable generates a vertically scrolling list of libraries with customizable UI components and interaction hooks. It supports:
+
+- Displaying core info: library name, author(s), version
+- License badges and dialogs
+- Optional funding badges
+- Custom headers, footers, and dividers
+- Styling through colors, padding, dimensions, and typography
+- Click handling for library and funding item taps
+
+### Core Parameters
+
+| Parameter            | Type                        | Description                                                                   |
+|----------------------|-----------------------------|-------------------------------------------------------------------------------|
+| `libraries`          | `Libs`                      | The parsed library metadata container from AboutLibraries JSON data.         |
+| `modifier`           | `Modifier`                  | Modifier for the container layout.                                           |
+| `libraryModifier`    | `Modifier`                  | Modifier applied to each library item individually.                          |
+| `lazyListState`      | `LazyListState`             | Controls the scrolling state of the libraries list.                          |
+| `contentPadding`     | `PaddingValues`             | Padding for the list content area.                                           |
+| `showAuthor`         | `Boolean`                   | Whether to show the author or developer names.                              |
+| `showDescription`    | `Boolean`                   | Whether to show library descriptions.                                       |
+| `showVersion`        | `Boolean`                   | Whether to display the library version.                                    |
+| `showLicenseBadges`  | `Boolean`                   | Toggle visibility of license badges.                                        |
+| `showFundingBadges`  | `Boolean`                   | Toggle visibility of funding badges.                                        |
+| `colors`             | `LibraryColors`             | Defines colors used for badges, text, backgrounds, and other UI elements.   |
+| `padding`            | `LibraryPadding`            | Spacing and padding values.                                                 |
+| `dimensions`         | `LibraryDimensions`         | Library item dimension settings (e.g., icon size).                          |
+| `textStyles`         | `LibraryTextStyles`         | Typography settings for titles, descriptions, badges, etc.                  |
+| `header`             | `(LazyListScope.() -> Unit)?` | Optional composable lambda for rendering a custom header above the list.|
+| `divider`            | `(@Composable LazyItemScope.() -> Unit)?` | Optional divider composable between items.                    |
+| `footer`             | `(LazyListScope.() -> Unit)?` | Optional composable lambda for rendering a footer below the list.      |
+| `onLibraryClick`     | `(Library) -> Unit)?`       | Lambda called when a library item is clicked.                              |
+| `onFundingClick`     | `(Funding) -> Unit)?`       | Lambda called when a funding badge is clicked.                            |
+
+
+### Example Usage
+
+```kotlin
+LibrariesContainer(
+    libraries = libraries,
+    modifier = Modifier.fillMaxSize(),
+    showAuthor = true,
+    showDescription = true,
+    showLicenseBadges = true,
+    showFundingBadges = false,
+    header = {
+        item {
+            Text("Open Source Licenses", modifier = Modifier.padding(16.dp))
+        }
+    },
+    divider = { Divider() },
+    footer = {
+        item {
+            Text("Thanks for using open source!")
+        }
+    },
+    onLibraryClick = { library ->
+        // Handle library click, e.g., show license dialog
+    }
+)
+```
+
+### Best Practices
+
+- Use the `header` and `footer` parameters to integrate app branding and context around the list.
+- Customize `colors` and `textStyles` to align the appearance with your app's theme.
+- Handle `onLibraryClick` to surface detailed license dialogs or navigate to project web pages.
+- Avoid overloading the list with descriptions unless necessary as it can affect readability.
+
+---
+
+## LibrariesScaffold
+
+### Purpose
+
+`LibrariesScaffold` provides a Material Design scaffold that wraps `LibrariesContainer` with a top app bar, system padding, and app bar configuration for polished, ready-to-use screens displaying your third-party libraries.
+
+### Core Parameters
+
+| Parameter          | Type                  | Description                                                    |
+|--------------------|-----------------------|----------------------------------------------------------------|
+| `libraries`        | `Libs`                | The `Libs` metadata to display.                               |
+| `modifier`         | `Modifier`            | Modifier for the scaffold layout container.                   |
+| `topBar`           | `@Composable () -> Unit` | Optional custom top app bar composable.                    |
+| `contentPadding`   | `PaddingValues`       | Content padding accounting for system bars.                   |
+| Other styling and behavioral options as supported by `LibrariesContainer` parameters.
+
+
+### Example Usage
+
+```kotlin
+LibrariesScaffold(
+    libraries = libraries,
+    topBar = {
+        TopAppBar(title = { Text("Open Source Licenses") })
+    },
+    onLibraryClick = { library ->
+        // Show detailed license info
+    }
+)
+```
+
+### When to Use
+
+- When you want a complete screen including an app bar and system insets handling provided out-of-the-box.
+- When embedding the license display within a flow using Material 2 or 3 Scaffold patterns.
+
+---
+
+## Advanced Customization
+
+### Headers, Footers, and Dividers
+Use the `header`, `footer`, and `divider` lambdas to inject composables at key points in the list.
+
+- The `header` and `footer` accept `LazyListScope` lambdas, allowing complex scrollable content above or below libraries.
+- The `divider` parameter expects a composable that renders between library items, like a simple line or custom separator.
+
+Example:
+
+```kotlin
+header = {
+    item { Text("Custom Header", modifier = Modifier.padding(16.dp)) }
+},
+divider = {
+    Divider(color = Color.LightGray)
+},
+footer = {
+    item { Text("End of list", modifier = Modifier.padding(16.dp)) }
+}
+```
+
+### Styling
+Customize the look and feel through the comprehensive style parameters:
+
+- `colors`: provides control over text, background, badge, and icon colors.
+- `padding`: handles spacing inside and between items.
+- `dimensions`: manages size parameters such as icon dimensions and spacing.
+- `textStyles`: defines fonts and sizes for titles, descriptions, and badges.
+
+These allow full theming aligned with your app's design language.
+
+### Interaction Handling
+
+- Use `onLibraryClick` to respond when a user taps a library entry, typically to show license details or external links.
+- Use `onFundingClick` to handle taps on funding badges, supporting donation or sponsorship flows.
+
+---
+
+## Working with Metadata Loading
+
+In most real-world scenarios, library metadata is loaded asynchronously from your app assets using the `rememberLibraries` API, which deserializes the `aboutlibraries.json` content into the `Libs` data model.
+
+Example loading from Asset or Resource:
+
+```kotlin
+val libraries by rememberLibraries {
+    // Load JSON string, e.g. from assets or resources
+    context.assets.open("aboutlibraries.json").bufferedReader().use { it.readText() }
+}
+```
+
+Pass this `libraries` object to `LibrariesContainer` or `LibrariesScaffold` for rendering.
+
+---
+
+## Troubleshooting
+
+**Common Issues:**
+
+- **Empty or missing library list:** Ensure `aboutlibraries.json` is properly generated with the Gradle plugin and included in app resources.
+- **UI not updating after metadata change:** Confirm that `rememberLibraries` is triggered with updated string content to refresh the state.
+- **Click handlers not firing:** Verify that `onLibraryClick` and `onFundingClick` lambdas are set appropriately.
+
+For detailed troubleshooting, see [Troubleshooting Common Scenarios](/guides/best-practices-workarounds/troubleshooting-common-scenarios).
+
+---
+
+## Practical Example
+
+Here is a complete basic usage example for a multiplatform Compose Desktop app:
+
+```kotlin
+@Composable
+fun MyLibraryScreen() {
+    val libraries by rememberLibraries {
+        // Load the aboutlibraries.json from your resources
+        loadResourceAsString("files/aboutlibraries.json")
+    }
+    LibrariesContainer(
+        libraries = libraries,
+        modifier = Modifier.fillMaxSize(),
+        showFundingBadges = false,
+        header = {
+            item {
+                Text("Third-Party Libraries", Modifier.padding(16.dp))
+            }
+        },
+        divider = {
+            Divider(color = Color.LightGray)
+        },
+        footer = {
+            item {
+                Text("Thank you for using open source!", Modifier.padding(16.dp))
+            }
+        },
+        onLibraryClick = { library ->
+            // Open license dialog or external link
+        }
+    )
+}
+```
+
+---
+
+## Related Components and APIs
+
+- **`rememberLibraries` API:** Asynchronously load and parse library metadata from JSON.
+- **`Libs` data model:** Immutable container representing parsed libraries and licenses.
+- **`LibraryColors`, `LibraryPadding`, `LibraryDimensions`, `LibraryTextStyles`:** Style customization data structures.
+- **License dialogs:** Display detailed license text and attribution when library items are clicked.
+
+---
+
+## Summary
+
+Use `LibrariesContainer` when you need a customizable library list Composable with flexible styling and behavior control. Wrap with `LibrariesScaffold` for a ready-to-use screen scaffold including app bar and padding.
+
+Thorough styling and interaction options let you align the display to your app experience while maintaining compliance with open source license disclosure requirements.
+
+---
+
+## Code References
+
+See sample multiplatform integration in the AboutLibraries repo:
+
+- [iOS sample using LibrariesContainer](app/src/iosMain/kotlin/com/mikepenz/aboutlibraries/sample/MainViewController.kt)
+- [Desktop Compose M3 sample using LibrariesContainer](app/src/desktopMain/kotlin/com/mikepenz/aboutlibraries/sample/m3/main.kt)
+- [rememberLibraries usage overview](api-reference/compose-api/rememberlibraries-data-loading)
+
+
+---
+
+# Navigation Links
+- [First App Integration & Usage](getting-started/configuration-and-first-run/first-app-integration)
+- [Compose UI Customization Guide](guides/advanced-integration/compose-customization)
+- [Troubleshooting Common Scenarios](guides/best-practices-workarounds/troubleshooting-common-scenarios)
+- [Libs Main Container and Builder API Reference](api-reference/core-data-models/libs-entity-reference)
+
+---
+
+If you want to see how these integrate within a full user flow or need to customize further, explore the related guides and API references to master your AboutLibraries Compose UI integration.

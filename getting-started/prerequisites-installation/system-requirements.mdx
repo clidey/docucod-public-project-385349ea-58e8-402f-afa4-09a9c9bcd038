@@ -1,0 +1,190 @@
+---
+title: "System Requirements"
+description: "Details the necessary build system prerequisites, supported programming languages (Kotlin Multiplatform, JVM, Android, Compose, Desktop, Wasm, and iOS), minimum Gradle versions, and any required plugins for smooth onboarding with AboutLibraries. This page helps ensure compatibility before you begin."
+---
+
+# System Requirements for AboutLibraries
+
+Ensure your development environment meets these specifications and prerequisite configurations before integrating AboutLibraries into your project. This guarantees smooth setup, build success, and optimal functionality across supported platforms.
+
+---
+
+## 1. Supported Platforms & Languages
+
+AboutLibraries supports multiple platforms leveraging Kotlin Multiplatform and JVM-based projects with seamless integration into Android, Desktop, iOS, and WebAssembly (Wasm) environments. The core languages and targets include:
+
+- **Kotlin Multiplatform (KMP):**
+  - Supports Android, JVM, Desktop (JVM), iOS (iosX64, iosArm64, iosSimulatorArm64), and Wasm.
+  - Enables common code sharing and multiplatform metadata processing.
+- **JVM / Android:**
+  - Full support for Android projects including Android applications and libraries.
+- **Compose Multiplatform:**
+  - UI components compatible with Android, Desktop, and iOS Compose environments.
+- **Wasm (WebAssembly):**
+  - Experimental support for Kotlin/JS targeting Wasm.
+
+<Check>
+Confirm your project aligns with at least one supported platform above to use AboutLibraries effectively.
+</Check>
+
+---
+
+## 2. Minimum Gradle Version
+
+To ensure full compatibility with the AboutLibraries Gradle plugin and build scripts, your project must use:
+
+- **Gradle 7.5 or higher** (recommended latest stable version)
+
+The plugin leverages Kotlin Multiplatform and some Gradle features that require modern Gradle versions.
+
+<Warning>
+Using older Gradle versions will cause build failures or incompatibilities with the AboutLibraries plugin configuration and code generation.
+</Warning>
+
+---
+
+## 3. Required Build Plugins
+
+Your build scripts should apply the following critical plugins to enable AboutLibraries features:
+
+- **Kotlin Multiplatform Plugin**: for platform-specific and shared code compilation
+- **Android Library or Application Plugin**: for Android platform support
+- **AboutLibraries Gradle Plugin**: handles dependency metadata collection and license management
+- **Compose Plugins (optional)**: if using AboutLibraries Compose UI modules
+
+Typical plugin declarations in `build.gradle.kts` look like this:
+
+```kotlin
+plugins {
+    id("com.mikepenz.convention.kotlin-multiplatform")
+    id("com.mikepenz.convention.android-library") // or android-application
+    id("com.mikepenz.aboutlibraries.plugin")
+    id("com.mikepenz.convention.compose") // optional for Compose UI
+}
+```
+
+<Info>
+Make sure to consult the [Install the Gradle Plugin](https://your-docs-link/getting-started/prerequisites-installation/install-gradle-plugin) guide for detailed instructions.
+</Info>
+
+---
+
+## 4. Kotlin Version Compatibility
+
+AboutLibraries requires Kotlin version **1.8.0 or newer**, aligning with the Kotlin Multiplatform and serialization libraries it depends on.
+
+Check your `gradle.properties` or project settings to confirm:
+
+```properties
+kotlin.version=1.8.0
+```
+
+<Note>
+Using the Kotlin plugin version declared by AboutLibraries's convention plugins will ensure compatibility.
+</Note>
+
+---
+
+## 5. Android SDK and Build Tools Requirements
+
+For Android development, ensure your environment meets these requirements:
+
+- **Compile SDK Version:** 33 or higher
+- **Minimum SDK Version:** 14 or higher (advanced features may require API 21+ depending on your libraries)
+- **Build Tools Version:** Latest stable recommended
+
+These are required to support the Android Support Libraries and Jetpack components AboutLibraries relies on.
+
+<Tip>
+Keep your Android Gradle Plugin updated (AGP 7.0+) for best compatibility with Kotlin Multiplatform and the AboutLibraries Android module.
+</Tip>
+
+---
+
+## 6. Additional Dependencies
+
+The following libraries are typically required as dependencies for AboutLibraries to function correctly:
+
+- Kotlinx Serialization
+- Kotlinx Coroutines Core
+- AndroidX Core KTX
+- Jetpack Lifecycle Components
+- Compose Runtime and Foundation (if using Compose UI modules)
+
+These dependencies are specified transitively through AboutLibraries modules, but in custom setups ensure they are present.
+
+<Note>
+If you use AboutLibraries UI components, also include Material Components for Android and FastAdapter libraries as referenced in sample build files.
+</Note>
+
+---
+
+## 7. Network and API Access (Optional)
+
+Certain AboutLibraries functions, such as fetching remote license data from GitHub, may require:
+
+- Internet connectivity during build time
+- Optional GitHub API token configuration for higher request limits
+
+Configure these only if you enable the remote license or funding data fetching features.
+
+---
+
+## 8. Recommended Development Environment Setup
+
+- **JDK 11 or newer** installed and configured for Gradle builds
+- **Android Studio or IntelliJ IDEA** with Kotlin Multiplatform plugin enabled
+- Configure **Gradle JVM memory settings** to at least 4GB heap for large projects (see example in `gradle.properties`):
+
+```properties
+org.gradle.jvmargs=-Xmx4096M -Dfile.encoding=UTF-8
+```
+
+---
+
+## Troubleshooting Tips
+
+<AccordionGroup title="Common Setup Issues">
+<Accordion title="Build Fails Due to Kotlin Version Mismatch">
+Ensure your Kotlin plugin version matches the supported versions in AboutLibraries. Adjust `kotlin.version` in your `gradle.properties` or use the plugin convention to avoid conflicts.
+</Accordion>
+<Accordion title="Plugin Not Recognized in Gradle">
+Verify the Gradle version is 7.5 or newer and that your repositories include Maven Central, Google, and Gradle Plugin Portal.
+</Accordion>
+<Accordion title="Android SDK Target Errors">
+Update your `compileSdkVersion` in the `android` block of your `build.gradle` to at least 33 and install the corresponding SDK in your SDK Manager.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## Verification Checklist
+
+Before proceeding with configuration and first-run instructions, confirm:
+
+- [ ] Gradle version is 7.5 or above
+- [ ] Kotlin Multiplatform and Android plugins are applied
+- [ ] Android SDK targets correctly set (API 33+)
+- [ ] JVM heap memory allocated as recommended
+- [ ] Correct Kotlin version (1.8.0+)
+- [ ] Required dependencies are included transitively by the plugin or manually
+
+Once these items are checked, transition smoothly into [Installing the Gradle Plugin](https://your-docs-link/getting-started/prerequisites-installation/install-gradle-plugin) and next steps.
+
+---
+
+## See Also
+
+- [Install the Gradle Plugin](https://your-docs-link/getting-started/prerequisites-installation/install-gradle-plugin)
+- [Add AboutLibraries Core & UI Dependencies](https://your-docs-link/getting-started/prerequisites-installation/add-library-dependencies)
+- [System Architecture Overview](https://your-docs-link/overview/architecture-core-concepts/system-architecture)
+- [Ecosystem & Integration Points](https://your-docs-link/overview/architecture-core-concepts/integration-points)
+
+---
+
+With your system properly prepared following this guide, you will ensure a smooth onboarding experience with AboutLibraries, unlocking compliance automation, ready-to-use third-party license data, and multiplatform UI support.
+
+
+---
+
+*This page is part of the Getting Started guides for AboutLibraries. For a holistic setup, please follow the sequential steps starting from System Requirements through Plugin Installation and Configuration.*

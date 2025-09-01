@@ -1,0 +1,192 @@
+---
+title: "Data Parsing and Serialization"
+description: "Guidance on parsing library and license information from JSON, as well as serializing and restoring state for persistence or transfer. Describes expected parsing contracts and serializable container usage for cross-platform state management."
+---
+
+# Data Parsing and Serialization
+
+The **Data Parsing and Serialization** page guides you through how AboutLibraries processes the library and license metadata encoded in JSON format, and how it manages the serialization and restoration of state for cross-platform usage. This documentation details the contracts expected for JSON data parsing, the usage of serializable containers for persistence and data transfer, and best practices for leveraging these capabilities in various runtime environments.
+
+---
+
+## Overview
+
+At the core of AboutLibraries’ runtime operation lies the ability to parse the generated JSON metadata containing library and license information, serialize this data into Kotlin objects, and restore state as needed. This process ensures consistent, efficient access to dependency information across platforms like Android, Desktop, iOS, and WASM.
+
+The key entry point for this workflow is the `Libs` class and its nested `Builder`. The `Builder` facilitates ingesting raw JSON strings and producing fully typed, immutable collections of library and license entities.
+
+This page focuses specifically on:
+- How JSON metadata is parsed and structured
+- The serialization formats and expectations
+- Mechanisms to serialize and restore the `Libs` container
+- Usage patterns that support persistence and cross-platform state transfer
+
+## Parsing JSON Metadata
+
+### Expected JSON Structure
+
+The metadata JSON is structured with two main elements:
+
+- **`libraries`**: An array of library objects with details such as unique IDs, developers, artifact versions, SCM info, descriptions, licenses, and optional funding data.
+- **`licenses`**: A map/object where license IDs link to detailed license texts, SPDX identifiers, URLs, years, and other metadata.
+
+An example snippet of the JSON structure for libraries and licenses looks like this:
+
+```json
+{
+  "libraries": [
+    {
+      "uniqueId": "com.mikepenz:materialdrawer",
+      "developers": [
+        { "organisationUrl": "https://mikepenz.dev", "name": "Mike Penz" }
+      ],
+      "artifactVersion": "9.0.0-a01",
+      "description": "The flexible, easy to use, all in one drawer library for your Android project.",
+      "scm": {
+        "connection": "scm:git@github.com:mikepenz/MaterialDrawer.git",
+        "url": "https://github.com/mikepenz/MaterialDrawer"
+      },
+      "name": "ABC MaterialDrawer Library",
+      "website": "https://github.com/mikepenz/MaterialDrawer",
+      "licenses": ["133a737bef925d338a857868bf2a1db5", "Apache-2.0"]
+    }
+  ],
+  "licenses": {
+    "133a737bef925d338a857868bf2a1db5": {
+      "content": "Apache License\nVersion 2.0, January 2004\nhttp://www.apache.org/licenses/\n...",
+      "hash": "133a737bef925d338a857868bf2a1db5",
+      "url": "https://raw.githubusercontent.com/mikepenz/MaterialDrawer/develop/LICENSE",
+      "spdxId": "Apache-2.0",
+      "name": "Apache License 2.0"
+    }
+  }
+}
+```
+
+### Parsing Contract
+
+The AboutLibraries parsing utilizes Kotlin Multiplatform serialization with platform-specific implementations:
+
+- **Android:** Leverages the native `JSONObject` class to parse JSON, building the collection of `Library` and `License` objects.
+- **Multiplatform (iOS/JS/Other):** Uses Kotlinx Serialization's JSON parser to interpret the string and map it into Kotlin data models.
+
+Parsing will:
+- Resolve license references within each library to detailed license objects.
+- Construct immutable collections (`ImmutableList` and `ImmutableSet`) for thread-safe, consistent data access.
+- Handle optional fields like funding, SCM, and organization gracefully.
+
+### Usage Example
+
+To parse JSON data at runtime and instantiate the `Libs` container:
+
+```kotlin
+val libs = Libs.Builder()
+  .withJson(jsonString) // Pass the raw JSON metadata string
+  .build() // Returns a Libs instance with parsed libraries and licenses
+```
+
+If no JSON data is provided before building, the builder throws an informative exception guiding how to source the metadata (e.g., from Android raw resources or multiplatform files).
+
+## Serialization and State Handling
+
+The `Libs` container and its associated entities (`Library`, `License`, `Developer`, `Organization`, `Scm`, `Funding`) are fully **serializable** using Kotlinx Serialization. This capability enables persistence, state saving, and transfer of library metadata across process or thread boundaries in a compact, structured format.
+
+### Common Serialization Scenarios
+
+- **Persistence:** Save the `Libs` object's serialized form to storage to restore the metadata later without reparsing JSON.
+- **State Transfer:** Pass serialized metadata across platforms or components, e.g., from a shared Kotlin module to Android UI modules.
+- **Multiplatform Sharing:** Serialize data on one platform and deserialize on another, maintaining full fidelity of the data.
+
+### Serialization Example
+
+Serializing `Libs` back to JSON:
+
+```kotlin
+import kotlinx.serialization.json.Json
+
+val jsonString = Json.encodeToString(Libs.serializer(), libsInstance)
+```
+
+Deserializing back:
+
+```kotlin
+val restoredLibs = Json.decodeFromString(Libs.serializer(), jsonString)
+```
+
+Because the types are immutable and use generated serializers, this round-trip is reliable and performant.
+
+## Entity Structure and Relationships
+
+Here is the hierarchy of core entities handled during parsing and serialization:
+
+- `Libs`
+  - Holds
+    - `libraries`: Immutable list of `Library`
+    - `licenses`: Immutable set of `License`
+- `Library`
+  - Fields include unique ID, artifact version, name, description, website
+  - Collections of `Developer`
+  - Optional `Organization`, `Scm`, and `Funding`
+  - Set of `License` references
+- `License`
+  - Represents license content, SPDX identifiers, URL, year
+- `Developer`, `Organization`, `Scm`, `Funding`
+  - Ancillary data with their own serializable fields
+
+This structure ensures all relevant metadata can be traversed and accessed in a user-friendly way.
+
+## Practical Tips and Best Practices
+
+- **Always use the `Libs.Builder()` to parse your metadata.** This encapsulates platform-specific parsing and validation.
+- **Validate the JSON metadata before runtime usage.** Corrupt or incomplete JSON can cause parsing failures.
+- **Leverage serialization to cache parsed data** if you need to avoid repeated JSON parsing overhead.
+- **Use immutable collections** (`ImmutableList`, `ImmutableSet`) from Kotlinx to maintain safe concurrency and reliable read-only access.
+- **For Android, use `Libs.Builder().withContext(context).build()`** to automatically load your embedded JSON resource from `raw` folder.
+
+## Error Handling and Troubleshooting
+
+If parsing fails:
+- Check the JSON file's integrity and conform to the schema aboutlibraries expects.
+- Verify all license references in library entries match declared licenses.
+- On Android, ensure the resource is placed correctly (e.g., `raw/aboutlibraries.json`).
+- Use the detailed exception message provided by the builder to trace missing JSON or misconfiguration.
+
+## Summary
+
+The Data Parsing and Serialization API of AboutLibraries empowers you to reliably intake, persist, and distribute rich open-source license metadata using platform-agnostic JSON structures transformed into Kotlin immutable data models. This ensures consistent attribution information in your app across different devices and runtime environments with minimal developer effort.
+
+## See Also
+
+- [Libs Main Container and Builder](/api-reference/core-data-models/libs-entity-reference)
+- [Library, License, and Related Entities](/api-reference/core-data-models/library-license-entities)
+- [First App Integration Guide](/getting-started/configuration-and-first-run/first-app-integration)
+- [Multiplatform Use Cases Guide](/guides/advanced-integration/multiplatform-use-cases)
+- [Compose UI API Reference](/api-reference/compose-api/compose-librariescontainer-api)
+
+---
+
+<AccordionGroup title="Code Sample: Parsing and Serialization Workflow">
+<Accordion title="Parsing JSON into Libs Instance">
+```kotlin
+val jsonMetadata: String = /* load JSON from file or resource */
+val libs = Libs.Builder()
+    .withJson(jsonMetadata)
+    .build()
+
+println("Parsed ${libs.libraries.size} libraries and ${libs.licenses.size} licenses")
+```
+</Accordion>
+<Accordion title="Serializing Libs Back to JSON">
+```kotlin
+import kotlinx.serialization.json.Json
+
+val jsonString = Json.encodeToString(Libs.serializer(), libs)
+println(jsonString)
+```
+</Accordion>
+<Accordion title="Deserializing JSON to Restore Libs Instance">
+```kotlin
+val restoredLibs = Json.decodeFromString(Libs.serializer(), jsonString)
+```
+</Accordion>
+</AccordionGroup>

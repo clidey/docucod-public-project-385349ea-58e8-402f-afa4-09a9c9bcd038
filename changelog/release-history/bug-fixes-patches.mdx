@@ -1,0 +1,135 @@
+---
+title: "Bug Fixes & Patches"
+description: "Documents resolved issues, patches, and quality improvements across releases. Stay informed about fixes that may affect stability, security, or compatibility, helping you maintain a robust integration and reduce technical debt over time."
+---
+
+# Bug Fixes & Patches
+
+Maintaining a stable and secure integration with AboutLibraries requires awareness of critical bug fixes and patches released over time. This page consolidates the resolutions of issues affecting stability, compatibility, security, and user experience, empowering you to keep your application robust and up to date.
+
+---
+
+## Understanding Bug Fixes Impact
+
+Bug fixes in AboutLibraries address a wide array of problems, from simple UI glitches to critical data parsing errors or metadata inconsistencies that could affect how third-party library information is displayed or enforced. By staying informed:
+
+- You reduce the risk of deprecated or insecure behavior in your app’s license attribution.
+- You improve integration compatibility with new Android or multiplatform environments.
+- You minimize technical debt by timely upgrading to versions that resolve issues affecting your app.
+
+---
+
+## Recent Notable Bug Fixes
+
+### Data Parsing and Metadata Handling
+
+- Improved resilience to malformed or incomplete `aboutlibraries.json` files to avoid app crashes during runtime metadata loading.
+- Fixed library version parsing inconsistencies that could lead to incorrect version display or sorting issues.
+- Resolved edge cases where certain licenses or funding entries were improperly filtered or duplicated.
+
+### UI Module (Legacy View-Based)
+
+- Corrected toolbar and theming inconsistencies when embedding the `LibsActivity` in apps with non-Material3 themes.
+- Fixed search functionality bugs that prevented filtering results when enabled via `LibsBuilder.withSearchEnabled(true)`.
+
+### Compose UI Integration
+
+- Addressed issues causing incorrect padding and spacing inside `LibrariesContainer` and related UI components.
+- Fixed dialog license descriptions not scrolling on smaller devices, improving accessibility and compliance display.
+- Patched problems in Compose previews and tooling libraries that interfered with IDE live previews.
+
+### Gradle Plugin
+
+- Fixed task execution order and configuration caching issues for smoother `exportLibraryDefinitions` executions.
+- Improved variant filtering and task registration to avoid generation of incomplete or missing metadata files.
+
+### Dependency and Version Compatibility
+
+- Upgraded dependencies (e.g., Kotlin, AndroidX libraries) to prevent conflicts and ensure compatibility with recent toolchains.
+- Addressed issues with Kotlin extension functions in `aboutlibraries-core` to improve runtime stability.
+
+---
+
+## Applying Bug Fixes
+
+Follow these general best practices to benefit from bug fixes:
+
+<Steps>
+<Step title="Review the Release Notes for Your Current Version">
+Check the specific version notes in the [Release History & Highlights](version-timeline) page to identify fixes that apply to your installed version.
+</Step>
+<Step title="Update AboutLibraries Dependencies">
+Update your dependency declarations in your build files, for example:
+
+```kotlin
+implementation("com.mikepenz:aboutlibraries:${latestVersion}")
+```
+
+and rebuild your project.
+</Step>
+<Step title="Test for Fix Effectiveness">
+Thoroughly validate license displays and UI behaviors, particularly around areas such as search, dialogs, metadata loading, and theming.
+</Step>
+<Step title="Validate Metadata Generation">
+Confirm the Gradle plugin successfully generates the latest `aboutlibraries.json` with resolved metadata issues, using tasks like `exportLibraryDefinitions`.
+</Step>
+</Steps>
+
+---
+
+## Troubleshooting Common Issues Resolved by Patches
+
+- **Crash During Library List Loading**: Ensure you are on a version that handles corrupt or missing metadata gracefully.
+
+- **Incorrect or Missing License Information on UI**: Apply patches that fix license parsing and display.
+
+- **Search Doesn't Filter Libraries**: Confirm enabling search with `LibsBuilder.withSearchEnabled(true)` and update to patched UI components.
+
+- **Theme or Padding Issues in Compose UI**: Upgrade Compose UI modules to versions that include layout fixes and padding improvements.
+
+- **Gradle Plugin Task Failures or Incomplete Metadata**: Update to plugin versions resolving task registration and configuration caching issues.
+
+---
+
+## Best Practices to Maintain Stability
+
+- Regularly upgrade AboutLibraries modules following official migration guides.
+- Use [Quick Validation Checklist](../getting-started/configuration-and-first-run/quick-validation) after upgrades to ensure your integration is healthy.
+- Test your app across devices and configurations to catch UI quirks early.
+- Monitor your runtime logs to spot metadata loading errors and act promptly.
+
+---
+
+## Version-Specific Fixes
+
+Refer to the detailed [Upgrade & Migration Guides](/changelog/breaking-changes-migration/migration-guides) page for stepwise instructions and impact analysis of bug fixes relevant to your version history.
+
+For example, migrating from v12 to v13 includes resolving breaking changes that also fix issues with Gradle plugin behavior and runtime library parsing.
+
+---
+
+## Additional Resources
+
+- [Release History & Highlights](version-timeline): Track overall improvements and patches chronologically.
+- [Troubleshooting Common Scenarios](../guides/best-practices-workarounds/troubleshooting-common-scenarios): Practical advice for fixing common issues.
+- [Plugin Configuration](../getting-started/configuration-and-first-run/plugin-configuration): Verify your plugin setup to avoid build-time issues.
+- [First App Integration and Usage](../getting-started/configuration-and-first-run/first-app-integration): Ensure correct runtime consumption of metadata.
+
+---
+
+## Get Involved
+
+If you encounter bugs or need help applying patches:
+
+- Check open issues on the [GitHub repository](https://github.com/mikepenz/AboutLibraries/issues).
+- Contribute by reporting detailed issue descriptions or submitting pull requests.
+
+Keeping AboutLibraries up to date will minimize disruptions and ensure compliance functionality stays reliable and seamless.
+
+---
+
+_Last Reviewed: June 2024_
+
+<Info>
+This page focuses exclusively on bug fixes and patches related to the AboutLibraries metadata and UI integration layers. For breaking changes and major version upgrades, consult the migration guides linked above.
+</Info>

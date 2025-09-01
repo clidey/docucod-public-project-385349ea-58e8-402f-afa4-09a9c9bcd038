@@ -1,0 +1,194 @@
+---
+title: "Exporting Dependency Metadata"
+description: "Guide on running Gradle tasks to generate and export the aboutlibraries.json metadata file, including variant-based exports and output file management. Learn how to generate the files manually for non-Android targets or automation scenarios."
+---
+
+# Exporting Dependency Metadata
+
+This guide explains how to use the AboutLibraries Gradle plugin to generate and export the `aboutlibraries.json` metadata file. This metadata contains detailed dependency and license information collected from your project's Gradle dependencies, which is essential for runtime consumption, compliance, and visualization.
+
+---
+
+## Workflow Overview
+
+### Task Description
+This guide helps you manually generate or automate the export of your project's dependency metadata into the `aboutlibraries.json` file using Gradle tasks. This is especially important for non-Android or multiplatform projects where automatic generation in the Android build process does not apply.
+
+### Prerequisites
+- AboutLibraries Gradle plugin applied in your module.
+- Proper configuration of output file destination in your `build.gradle` or `build.gradle.kts`.
+- Variant knowledge if working with variant-specific builds.
+
+### Expected Outcome
+You will have one or more `aboutlibraries.json` files generated at defined locations in your project structure, capturing full dependency and license data for use at runtime or in CI workflows.
+
+### Time Estimate
+Approximately 5-10 minutes, depending on project size and configuration.
+
+### Difficulty Level
+Beginner to Intermediate, depending on your familiarity with Gradle tasks and plugin configuration.
+
+---
+
+## Step-by-Step Instructions
+
+### 1. Configure the Export Location and Variant
+
+The AboutLibraries Gradle plugin exposes an `aboutLibraries` extension allowing you to specify the output file and optionally the variant to export.
+
+```kotlin
+aboutLibraries {
+    export {
+        outputFile = file("src/commonMain/composeResources/files/aboutlibraries.json")
+        // To export a specific variant, uncomment and customize the line below:
+        // variant = "release"
+    }
+}
+```
+
+#### Tips
+- Use a path relative to your module where the app or multiplatform framework expects the JSON metadata.
+- Declaring the variant is important if your module builds multiple variants such as `debug`, `release`, or platform-specific targets.
+
+---
+
+### 2. Run the Gradle Export Task Manually
+
+Run the following Gradle task to generate the metadata file based on your configuration:
+
+```bash
+./gradlew :<module>:exportLibraryDefinitions
+```
+
+Replace `<module>` with your actual module name, e.g., `app-desktop` or `app-wasm`.
+
+You can override the output file and variant directly via command line for ad-hoc exports:
+
+```bash
+./gradlew :app-desktop:exportLibraryDefinitions \
+  -PaboutLibraries.outputFile=src/main/resources/libraries.json \
+  -PaboutLibraries.exportVariant=release
+```
+
+
+### 3. Confirm the Output
+
+After execution, verify the presence of the generated `aboutlibraries.json` file at the configured location.
+
+It should contain structured JSON data about all your dependencies and their licenses.
+
+### 4. Commit the Meta Data (Optional)
+
+For CI/CD or multi-developer environments, commit the generated JSON to version control to ensure consistency and reproducibility.
+
+### 5. Use the Exported Metadata at Runtime
+
+Reference the exported JSON at runtime in your app using the appropriate AboutLibraries API for your platform.
+
+See the [First App Integration and Usage](#getting-started/configuration-and-first-run/first-app-integration) guide for details.
+
+---
+
+## Variant-Based Export and Multiple Outputs
+
+The plugin supports variant-based export configurations allowing you to define multiple outputs, one per variant, in your `build.gradle`:
+
+```kotlin
+aboutLibraries {
+    exports {
+        create("jvm") {
+            outputFile = file("files/jvm/aboutlibraries.json")
+        }
+        create("wasmJs") {
+            outputFile = file("files/wasmJs/aboutlibraries.json")
+        }
+    }
+}
+```
+
+Run the export specifying the variant to generate each corresponding metadata file:
+
+```bash
+./gradlew :app-wasm:exportLibraryDefinitions -PaboutLibraries.exportVariant=wasmJs
+```
+
+---
+
+## Available Gradle Export Tasks
+
+| Task Name                      | Description                                                      |
+|-------------------------------|------------------------------------------------------------------|
+| `exportLibraryDefinitions`    | Generates the `aboutlibraries.json` metadata file(s)             |
+| `exportLibraries`             | Exports dependency metadata in CLI or CSV format                  |
+| `exportComplianceLibraries`   | Generates compliance-friendly reports in CSV and TXT formats     |
+| `exportFunding`               | Generates funding information JSON files if a GitHub token is set |
+| `findLibraries`               | Lists all dependencies by name, version, and ID in the console    |
+
+Example:
+
+```bash
+./gradlew :app:exportLibraryDefinitions
+./gradlew :app:exportComplianceLibrariesRelease -PaboutLibraries.exportPath=complianceReport/
+```
+
+---
+
+## Practical Examples
+
+### Example 1: Manual Export for a Desktop Compose Target
+
+```bash
+./gradlew :app-desktop:exportLibraryDefinitions -PaboutLibraries.outputFile=src/main/resources/libraries.json
+```
+
+This exports a full metadata file for the desktop target at `src/main/resources/libraries.json`.
+
+
+### Example 2: Export for WebAssembly Target with Variant Selection
+
+```bash
+./gradlew :app-wasm:exportLibraryDefinitions -PaboutLibraries.outputFile=src/jsMain/resources/aboutlibraries.json -PaboutLibraries.exportVariant=wasmJs
+```
+
+This exports metadata filtered for the WebAssembly variant.
+
+---
+
+## Best Practices
+
+- **Consistent Export Location:** Keep your `outputFile` configuration consistent with your platform's expected resource paths.
+- **Configure Variants for Multiplatform:** Explicitly specify `variant` when building for Android or other variant-based targets to avoid confusion.
+- **Commit Metadata:** Commit your generated `aboutlibraries.json` to git to stabilize your build and runtime behavior.
+- **Automate in CI:** Use the export tasks as part of your CI pipeline for automated license compliance checks.
+- **Use Naming Conventions:** Organize outputs in variant-named folders or with descriptive filenames for clarity.
+
+---
+
+## Troubleshooting
+
+### Metadata File Not Found
+Ensure that the plugin is applied and configured in the Gradle module where you run the task.
+
+### No Output at Expected Location
+Check that the `outputFile` path is correctly set and writable.
+Double-check variant specification if applicable.
+
+### Variant Export Not Working
+Confirm the variant name matches exactly what your build uses (case-sensitive).
+
+### Licensing Information Missing or Incomplete
+Review dependency information for correctness and completeness. Use `findLibraries` to inspect recognized dependencies.
+
+---
+
+## Next Steps & Related Content
+
+- **[Setting Up the Gradle Plugin](/guides/getting-started/setup-gradle-plugin):** Learn how to configure the plugin initially.
+- **[First App Integration and Usage](/getting-started/configuration-and-first-run/first-app-integration):** How to load and display the exported metadata in your app.
+- **[Customizing Library and License Metadata](/guides/advanced-integration/modifying-library-license-info):** Modify or extend your exported data.
+- **[Compliance and License Strict Mode](/guides/best-practices-workarounds/compliance-and-license-strict-mode):** Automate license compliance enforcement.
+- **[Troubleshooting Common Scenarios](/guides/best-practices-workarounds/troubleshooting-common-scenarios):** Resolve frequent issues encountered during export and integration.
+
+---
+
+By following this guide, you can successfully generate and manage the `aboutlibraries.json` metadata file for your multiplatform or non-Android projects, ensuring your app complies with open source license requirements and can visualize dependency information effectively.

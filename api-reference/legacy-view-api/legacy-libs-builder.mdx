@@ -1,0 +1,305 @@
+---
+title: "LibsBuilder & Configuration"
+description: "Describes the (deprecated) LibsBuilder class for launching and configuring the legacy AboutLibraries UI, as well as configuration utilities for customizing legacy view-based event handling and screen rendering."
+---
+
+# LibsBuilder & Configuration (Legacy View-Based UI)
+
+This documentation details the **`LibsBuilder`** class and supporting configuration utilities that facilitate the launching and customization of the legacy, view-based AboutLibraries UI module. While this API is deprecated in favor of the modern Compose UI, it remains relevant for maintaining and migrating existing Android integrations that rely on activities and fragments with RecyclerView for displaying open source library attributions.
+
+---
+
+## Overview
+
+`LibsBuilder` is the primary entry point for configuring and launching the legacy AboutLibraries UI, either as a standalone **Activity** (`LibsActivity`) or embedded as a **Fragment** (`LibsSupportFragment`). It provides a fluent builder interface that controls what information is displayed, how it is sorted and presented, and enables key UI behaviors such as search and edge-to-edge content display.
+
+> **Important:** This API is fully deprecated. Users are encouraged to migrate to the Compose-based UI components for more modern, flexible, and maintainable integrations. See migration notes in the AboutLibraries README and Compose UI documentation.
+
+---
+
+## Key Features
+
+- Configure display options for library license info, version numbers, application icon, and description.
+- Enable or disable license dialogs and loading progress indicators.
+- Control sorting and custom ordering of libraries via comparator.
+- Enable search functionality in the activity toolbar or manually with the fragment.
+- Create intents for launching the built-in `LibsActivity` or build a fragment for embedding.
+- Provide callbacks and UI interceptors via `LibsConfiguration`.
+
+---
+
+## Using LibsBuilder
+
+### Creating and Launching the Activity
+
+Instantiate and configure a `LibsBuilder` with the desired options before starting the legacy UI activity.
+
+```kotlin
+val builder = LibsBuilder()
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .withAboutIconShown(true)
+    .withSearchEnabled(true)
+    .withEdgeToEdge(true)
+    .withActivityTitle("Open Source Libraries")
+
+// Launch the LibsActivity with configured options
+builder.start(context)
+```
+
+The `start()` method wraps intent creation and activity launch with all set parameters.
+
+### Creating and Embedding a Fragment
+
+If you prefer embedding the UI inside an existing activity or navigation flow, create a fragment instance instead.
+
+```kotlin
+val fragment = LibsBuilder()
+    .withLicenseShown(true)
+    .supportFragment()
+
+// Then embed 'fragment' inside your Activity or NavHost
+supportFragmentManager.beginTransaction()
+    .replace(R.id.container, fragment)
+    .commit()
+```
+
+> **Note:** When using `supportFragment()`, custom library sorting via `withLibraryComparator()` is not supported.
+
+### Using Custom Sorting
+
+You can provide a custom comparator to order libraries, which automatically enables sorting.
+
+```kotlin
+class CustomLibraryComparator : Comparator<Library> {
+    override fun compare(a: Library, b: Library): Int {
+        // Example: sort by author ascending, then name descending
+        val authorCompare = a.author.compareTo(b.author)
+        return if (authorCompare != 0) authorCompare else b.name.compareTo(a.name)
+    }
+}
+
+val builder = LibsBuilder()
+    .withLibraryComparator(CustomLibraryComparator())
+    .withSearchEnabled(true)
+    .start(context)
+```
+
+> This disables supportFragment usage to avoid conflicts.
+
+---
+
+## Configuration Options
+
+### Library Display
+
+| Option                          | Default | Description                                                                                      |
+|--------------------------------|---------|------------------------------------------------------------------------------------------------|
+| `withLicenseShown(show: Boolean)`         | true    | Show or hide license information in the library list.                                          |
+| `withLicenseDialog(show: Boolean)`        | true    | Show license details in a dialog on click (if license shown).                                  |
+| `withVersionShown(show: Boolean)`         | true    | Show or hide the library version number.                                                      |
+| `withSortEnabled(enabled: Boolean)`       | true    | Enable or disable sorting of the libraries.                                                   |
+| `withLibraryComparator(comparator)`       | null    | Provide custom comparator to order libraries, enables sorting automatically.                   |
+
+### About This App Section
+
+| Option                          | Default | Description                                                                                      |
+|--------------------------------|---------|------------------------------------------------------------------------------------------------|
+| `withAboutIconShown(show: Boolean)`       | true    | Show or hide the application icon in the About section header.                                |
+| `withAboutVersionShown(show: Boolean)`    | true    | Show app version info (toggles both version name and code).                                   |
+| `withAboutVersionShownName(show: Boolean)`| true   | Show only app version name in About section.                                                  |
+| `withAboutVersionShownCode(show: Boolean)`| true   | Show only app version code in About section.                                                  |
+| `withAboutVersionString(version: String)`| ""    | Set custom version string in About section header (overridden if version shown by default).   |
+| `withAboutAppName(name: String)`           | null    | Set custom app name text in About section.                                                    |
+| `withAboutDescription(description: String)`| null   | Set app description text in About section, supports HTML markup.                              |
+| `withAboutMinimalDesign(enabled: Boolean)`| false   | Use a simplified visual style for library list items.                                         |
+| `withAboutSpecial1(text: String)`          | null    | Set text for special button 1 in About section.                                              |
+| `withAboutSpecial1Description(desc: String)`| null  | Set description dialog text for special button 1.                                            |
+| `withAboutSpecial2(text: String)`          | null    | Set text for special button 2.                                                                |
+| `withAboutSpecial2Description(desc: String)`| null  | Set description dialog text for special button 2.                                            |
+| `withAboutSpecial3(text: String)`          | null    | Set text for special button 3.                                                                |
+| `withAboutSpecial3Description(desc: String)`| null  | Set description dialog text for special button 3.                                            |
+
+### UI Behavior
+
+| Option                   | Default | Description                                                        |
+|--------------------------|---------|--------------------------------------------------------------------|
+| `withSearchEnabled(enabled: Boolean)`| false | Enable search in activity toolbar, filters the library list.   |
+| `withEdgeToEdge(enabled: Boolean)`   | false | Enables edge-to-edge content layout for immersive UI experience. |
+| `withShowLoadingProgress(enabled: Boolean)`| true | Show loading progress indicator while libraries load.            |
+
+### Activity & Fragment
+
+| Method            | Description                                                     |
+|-------------------|-----------------------------------------------------------------|
+| `intent(ctx: Context)`| Creates the Intent to launch the `LibsActivity` with set options.  |
+| `start(ctx: Context)` | Starts the `LibsActivity` using the created intent.              |
+| `activity(ctx: Context)` | Alias to `start()`, starts activity.                          |
+| `supportFragment()` | Creates `LibsSupportFragment` with configured options for embedding in UI. |
+
+---
+
+## LibsConfiguration Utility
+
+### Purpose
+
+The `LibsConfiguration` object provides hooks and listeners to further customize interaction behavior and rendering of the legacy UI components.
+
+### Features
+
+- **UI Listener (`LibsUIListener`)**: Intercept and modify the UI view before and after creation.
+- **Listener (`LibsListener`)**: Receive callback events for user interactions such as clicking library icons, author names, content areas, bottom areas, and special buttons.
+- **Item Animator**: Customize RecyclerView item animations.
+
+### Usage
+
+Set these listeners globally before launching the UI, typically immediately after creating a `LibsBuilder` or in your app's initialization.
+
+```kotlin
+LibsConfiguration.listener = object : LibsConfiguration.LibsListener {
+    override fun onIconClicked(v: View) {
+        // Handle icon clicks
+    }
+
+    override fun onLibraryContentClicked(v: View, library: Library): Boolean {
+        // Return true if event consumed
+        return false
+    }
+    // Implement other callbacks as needed
+}
+
+LibsConfiguration.uiListener = object : LibsConfiguration.LibsUIListener {
+    override fun preOnCreateView(view: View): View {
+        // Modify view before creation
+        return view
+    }
+
+    override fun postOnCreateView(view: View): View {
+        // Modify view after creation
+        return view
+    }
+}
+
+LibsConfiguration.itemAnimator = null // or provide a custom RecyclerView.ItemAnimator
+```
+
+> **Note:** Only one listener instance can be assigned globally to `LibsConfiguration` for each listener interface.
+
+---
+
+## Practical Example: Starting the Legacy UI with Custom Options
+
+```kotlin
+val builder = LibsBuilder()
+    .withShowLoadingProgress(true)
+    .withSearchEnabled(true)
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .withAboutIconShown(true)
+    .withAboutDescription("This app shows open source licenses used.")
+    .withActivityTitle("About Open Source")
+    .withEdgeToEdge(true)
+
+builder.start(context)
+```
+
+This example launches a full-featured `LibsActivity` with license information, version numbers, search enabled, and immersive edge-to-edge layout.
+
+---
+
+## Common Use Cases and User Flows
+
+### 1. Quickly Adding an AboutLibraries Screen
+
+- Instantiate `LibsBuilder`
+- Set display options (e.g. license shown)
+- Call `start(context)`
+- User sees open source attribution screen with minimal configuration.
+
+### 2. Embedding the Libraries List as a Fragment
+
+- Create `LibsSupportFragment` via `LibsBuilder.supportFragment()`
+- Add fragment to existing Activity or navigation graph
+- Manage search UI externally and connect to `LibsSupportFragment.getFilter()`
+
+### 3. Custom Sorting Libraries
+
+- Provide a comparator via `withLibraryComparator()`
+- Disable or skip fragment embedding as fragment does not support comparators.
+
+### 4. Handling Click Events and UI Modifications
+
+- Register a `LibsConfiguration.LibsListener` for click handling
+- Implement `LibsConfiguration.LibsUIListener` to customize screen views
+
+---
+
+## Important Details and Best Practices
+
+- **Search:** Enabling search on the activity provides a toolbar-integrated SearchView. When embedding the fragment, you must implement your own search UI hooked to `LibsSupportFragment.getFilter()`.
+- **Sorting:** If custom sorting is required, avoid using the fragment; use the activity instead.
+- **UI Customizations:** Use `LibsConfiguration.uiListener` sparingly for layout manipulation.
+- **Listeners:** Return `true` from click handlers to consume events and prevent default navigation.
+- **Deprecated Status:** This module and APIs are deprecated. Transition to Compose UI integration for better maintainability and updated UX.
+
+---
+
+## Troubleshooting
+
+### Issue: Custom Comparator Fails with Fragment
+
+- **Cause:** Fragment support does not allow custom comparators.
+- **Solution:** Use the Activity (`LibsActivity`) instead by invoking `start` on the builder.
+
+### Issue: Search Does Not Appear
+
+- **Cause:** Search enabled only applies on the Activity, not embedded fragments.
+- **Solution:** Enable search in the builder for activity, or implement your own search UI for fragment usage.
+
+### Issue: App Icon or Version Info Not Displaying
+
+- **Cause:** The app icon and versions depend on manifest data and theme support.
+- **Solution:** Verify `withAboutIconShown(true)` and correct app versioning in build.gradle.
+
+### Issue: UI Does Not Extend Edge-to-Edge
+
+- **Cause:** The edge-to-edge flag requires both builder configuration and system UI setup.
+- **Solution:** Use `.withEdgeToEdge(true)` and verify your activity theme supports edge-to-edge rendering.
+
+---
+
+## Source Reference
+
+The `LibsBuilder` class and `LibsConfiguration` singleton are implemented in the AboutLibraries Android legacy UI module under:
+
+- [`LibsBuilder.kt`](https://github.com/mikepenz/AboutLibraries/blob/main/aboutlibraries/src/androidMain/kotlin/com/mikepenz/aboutlibraries/LibsBuilder.kt)
+- [`LibsConfiguration.kt`](https://github.com/mikepenz/AboutLibraries/blob/main/aboutlibraries/src/androidMain/kotlin/com/mikepenz/aboutlibraries/LibsConfiguration.kt)
+
+Supporting UI components:
+
+- [`LibsActivity.kt`](https://github.com/mikepenz/AboutLibraries/blob/main/aboutlibraries/src/androidMain/kotlin/com/mikepenz/aboutlibraries/ui/LibsActivity.kt)
+- [`LibsSupportFragment.kt`](https://github.com/mikepenz/AboutLibraries/blob/main/aboutlibraries/src/androidMain/kotlin/com/mikepenz/aboutlibraries/ui/LibsSupportFragment.kt)
+
+Example custom sorting usage:
+
+- [`CustomSortActivity.kt`](https://github.com/mikepenz/AboutLibraries/blob/main/app/src/androidMain/kotlin/com/mikepenz/aboutlibraries/sample/CustomSortActivity.kt)
+
+---
+
+## Deprecation and Migration
+
+> The legacy view-based UI represented by `LibsBuilder` and associated activities/fragments is deprecated. New projects should prefer the Compose UI module for improved modularity and modern Kotlin multiplatform support.
+
+Migration guidance and updated usage can be found in the Compose UI documentation under the API Reference > Compose UI API section.
+
+---
+
+## Related Documentation
+
+- [AboutLibraries Legacy View-Based API Overview (Deprecated)](/api-reference/legacy-view-api/legacy-libs-builder)
+- [Libs Main Container and Builder](../core-data-models/libs-entity-reference)
+- [Compose UI API – LibrariesContainer and customization](../../compose-api/compose-librariescontainer-api)
+- [First App Integration Guide](../../getting-started/configuration-and-first-run/first-app-integration)
+- [Migrating to Compose UI](https://github.com/mikepenz/AboutLibraries#compose-ui)
+
+---

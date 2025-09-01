@@ -1,0 +1,377 @@
+---
+title: "Customizing Compose UI Integration"
+description: "Explore ways to deeply customize the AboutLibraries Compose UI, including adding custom headers, footers, dividers, or actions, modifying item appearance, and using advanced Compose patterns for full branding alignment."
+---
+
+# Customizing Compose UI Integration
+
+Explore how to tailor the AboutLibraries Compose UI to perfectly fit your app’s branding and user experience. This guide focuses specifically on customizing the `LibrariesContainer` composable and related UI elements to add custom headers, footers, dividers, modify library item appearance, and leverage advanced Compose patterns for full control.
+
+---
+
+## 1. What You Can Customize
+
+The `LibrariesContainer` composable is designed for flexibility and offers multiple extension points:
+
+- **Header and Footer:** Add fully custom composables above or below the library list.
+- **Divider:** Insert custom separators between library items.
+- **Library Item Content:** Override default display of name, version, author, description, license badges, funding badges, and action buttons.
+- **Dialog Content:** Customize the license detail dialog content.
+- **Styling:** Colors, paddings, dimensions, text styles, and shapes can be overridden.
+- **Callbacks:** React to clicks on libraries and funding badges with your own implementations.
+
+This modular design enables everything from minor tweaks (color scheme adjustments) to extensive UI overhauls (unique layouts and interactions).
+
+---
+
+## 2. Getting Started with Basic Customization
+
+### Prerequisites
+- You have integrated AboutLibraries and are displaying the default `LibrariesContainer`.
+- You understand basic Jetpack Compose concepts.
+
+### Outcome
+You will add a custom header and footer, replace the default divider, and customize the library name appearance.
+
+### Time Estimate
+~15 minutes
+
+### Difficulty Level
+Beginner to Intermediate
+
+### Steps
+<Steps>
+<Step title="Add a Custom Header">
+Use the `header` parameter to inject composables in the list header area.
+
+**Example:**
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    header = {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "Thank you for using our app!", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+    }
+)
+```
+
+**Expected Result:** The header text appears centered at the top.
+</Step>
+<Step title="Insert a Custom Divider">
+Override the `divider` composable to customize separators between items.
+
+**Example:**
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    divider = {
+        androidx.compose.material3.Divider(thickness = 2.dp, color = Color.Gray)
+    }
+)
+```
+
+**Expected Result:** Each item is separated by a thick gray line.
+</Step>
+<Step title="Add a Footer">
+Add custom composables to the list footer with the `footer` lambda.
+
+**Example:**
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    footer = {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "End of Open Source Licenses", style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+)
+```
+
+**Expected Result:** Footer text appears at the bottom.
+</Step>
+<Step title="Customize Library Name Display">
+Use the `name` composable parameter to override how the library name is displayed.
+
+**Example:**
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    name = { libraryName ->
+        Text(
+            text = libraryName.uppercase(),
+            style = MaterialTheme.typography.h5,
+            color = Color.Magenta
+        )
+    }
+)
+```
+
+**Expected Result:** All library names appear in uppercase magenta text.
+</Step>
+</Steps>
+
+---
+
+## 3. Advanced Customization Techniques
+
+### 3.1. Overriding Other Library Item Elements
+
+You can override the following composables similarly:
+
+| Element             | Parameter Name     |
+|---------------------|--------------------|
+| Version             | `version`          |
+| Author              | `author`           |
+| Description         | `description`      |
+| License Badges      | `license`          |
+| Funding Badges      | `funding`          |
+| Action Buttons      | `actions`          |
+
+Each parameter receives relevant data and the typical Compose scope. For example, to customize version:
+
+```kotlin
+version = { version ->
+    Text("v$version", fontWeight = FontWeight.Bold)
+}
+```
+
+---
+
+### 3.2. Providing Custom Actions and Click Callbacks
+
+Use `onLibraryClick` to handle entire library item clicks, or provide an `actions` slot to show action buttons.
+
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    onLibraryClick = { library ->
+        // Navigate to a detailed screen
+    },
+    actions = { library ->
+        TextButton(onClick = { println("Clicked star on ${library.name}") }) {
+            Text("⭐ Favorite")
+        }
+    }
+)
+```
+
+---
+
+### 3.3. Styling: Colors, Padding, Dimensions, Text Styles, and Shapes
+
+The UI uses `LibraryColors`, `LibraryPadding`, `LibraryDimensions`, `LibraryTextStyles`, and `LibraryShapes` for styling:
+
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    colors = LibraryDefaults.libraryColors(
+        libraryBackgroundColor = Color.DarkGray,
+        libraryContentColor = Color.White
+    ),
+    padding = LibraryDefaults.libraryPadding(
+        contentPadding = PaddingValues(24.dp)
+    ),
+    dimensions = LibraryDefaults.libraryDimensions(
+        chipMinHeight = 20.dp
+    ),
+    textStyles = LibraryDefaults.libraryTextStyles(
+        nameTextStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.ExtraBold)
+    ),
+    shapes = LibraryDefaults.libraryShapes(
+        chipShape = RoundedCornerShape(12.dp)
+    )
+)
+```
+
+---
+
+### 3.4. Customizing License Dialog Content
+
+The `licenseDialogBody` parameter lets you replace the default license text dialog with your own UI.
+
+```kotlin
+LibrariesContainer(
+    libraries = yourLibraries,
+    licenseDialogBody = { library, modifier ->
+        Column(modifier.padding(16.dp)) {
+            Text("License for: ${library.name}", fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(library.strippedLicenseContent.takeIf { it.isNotBlank() } ?: "No license text available.")
+        }
+    }
+)
+```
+
+---
+
+## 4. Real-World Example
+
+Here’s a complete example illustrating many customizations:
+
+```kotlin
+LibrariesContainer(
+    libraries = librariesData,
+    modifier = Modifier.fillMaxSize().padding(16.dp),
+    showFundingBadges = true,
+    header = {
+        item {
+            Text(
+                "Open Source Licenses",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+    },
+    divider = {
+        androidx.compose.material3.Divider(color = Color.LightGray, thickness = 1.dp)
+    },
+    footer = {
+        item {
+            Text(
+                "App Version 1.0.0",
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                style = MaterialTheme.typography.labelMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+    },
+    name = { name ->
+        Text(
+            text = name.uppercase(),
+            color = Color(0xFF6200EE),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+        )
+    },
+    onLibraryClick = { library ->
+        println("Library clicked: ${library.name}")
+    },
+    actions = { library ->
+        TextButton(onClick = { println("Action for ${library.name}") }) {
+            Text("Details")
+        }
+    },
+    colors = LibraryDefaults.libraryColors(
+        libraryBackgroundColor = Color(0xFFF0F0F0),
+        libraryContentColor = Color.Black,
+        versionChipColors = LibraryDefaults.chipColors(containerColor = Color(0xFFBB86FC), contentColor = Color.White),
+        licenseChipColors = LibraryDefaults.chipColors(containerColor = Color.Gray, contentColor = Color.White)
+    )
+)
+```
+
+**Result:**
+
+- Bold header and footer.
+- Uppercased and colored library names.
+- Custom colored chips.
+- Action buttons on each library item.
+
+---
+
+## 5. Common Pitfalls & Tips
+
+<Tip>
+Always respect accessibility practices. Adjust colors to ensure sufficient contrast and make the UI navigable with keyboards and screen readers.
+</Tip>
+
+<Warning>
+Do not overload library items with too many custom actions or heavy content to keep the UI responsive and readable.
+</Warning>
+
+<Tip>
+If you override `onLibraryClick`, remember to handle the license dialog yourself if needed.
+</Tip>
+
+<Note>
+Ensure your custom composables use Compose’s `Modifier` system properly to maintain layout, padding, and scrolling behavior.
+</Note>
+
+---
+
+## 6. Verification & Troubleshooting
+
+- **Verify UI changes appear correctly**: Run your app and confirm your custom header, footer, divider, and item styles display as intended.
+- **Check dialogs open and close correctly** if customized.
+- **If actions or clicks don’t work**, ensure your lambdas are properly connected.
+- **If your UI breaks or has layout issues**, confirm modifiers and sizing logic are consistent.
+
+For build or runtime errors related to Compose UI or AboutLibraries, consult the [Troubleshooting Common Scenarios](https://yourdocs.example/guides/best-practices-workarounds/troubleshooting-common-scenarios) page.
+
+---
+
+## 7. Next Steps & Related Content
+
+- Explore the [First App Integration and Usage](../getting-started/configuration-and-first-run/first-app-integration) guide for foundational setup.
+- Review the [Compose Component Customization API Reference](../../api-reference/compose-api/compose-components-customization) for in-depth parameter details.
+- Learn about generating metadata in the [Generating Library Metadata](../../getting-started/configuration-and-first-run/generate-metadata) guide.
+- For multiplatform projects, see [Multiplatform and Non-Android Use Cases](../advanced-integration/multiplatform-use-cases).
+
+---
+
+## 8. Example Reference
+
+Below is a minimal example that sets a customized header, footer, and library name style:
+
+```kotlin
+LibrariesContainer(
+    libraries = libs,
+    header = {
+        item {
+            Text(
+                "Special Thanks to Open Source",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                style = MaterialTheme.typography.h6,
+                textAlign = TextAlign.Center
+            )
+        }
+    },
+    footer = {
+        item {
+            Text(
+                "License info provided by AboutLibraries",
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                style = MaterialTheme.typography.caption,
+                textAlign = TextAlign.Center
+            )
+        }
+    },
+    name = { name ->
+        Text(name, style = MaterialTheme.typography.h5, color = Color.Blue)
+    }
+)
+```
+
+This snippet dramatically personalizes the presentation with minimal code changes.
+
+---
+
+Your journey to making AboutLibraries your own UI and experience begins here. Customize confidently to present your open source licenses in style!
+
+
+---
+
+## References
+
+- [LibrariesContainer API](../../api-reference/compose-api/compose-librariescontainer-api)
+- [First App Integration](../../getting-started/configuration-and-first-run/first-app-integration)
+- [Troubleshooting Common Scenarios](../../guides/best-practices-workarounds/troubleshooting-common-scenarios)
+- [Multiplatform Compose Integration](../advanced-integration/multiplatform-use-cases)
+- [GitHub Source Repository](https://github.com/mikepenz/AboutLibraries)
+
+---

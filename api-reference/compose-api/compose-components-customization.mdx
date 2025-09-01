@@ -1,0 +1,288 @@
+---
+title: "Compose Component Customization"
+description: "Detailed reference for customizing the presentation of library items in Compose: including default components (name, version, license, author, funding), color schemes, dimensions, text styles, and icon representation for funding types. Learn about composable overrides and extension hooks."
+---
+
+# Compose Component Customization
+
+Customize the visual presentation and behavior of library items in the AboutLibraries Compose UI to match your app's branding and user experience needs. This reference details the default components provided, styling options such as colors, dimensions, and text styles, plus extension hooks and composable overrides to deeply tailor your libraries display.
+
+---
+
+## Overview
+
+The `LibrariesContainer` composable is the primary UI component for rendering libraries and their license information. It is designed for flexibility, providing slots and parameters to override how individual parts of a library entry are presented. This empowers you to control layout, colors, typography, interactivity, and more, without modifying core logic.
+
+You can customize:
+
+- Displayed components such as name, version, author, description, license badges, and funding badges
+- Visual styling including color schemes, padding, dimensions, shapes, and text styles
+- Interaction behaviors like click actions on libraries or funding platforms
+- Dialog UI that shows license details
+
+
+---
+
+## Default Components
+
+AboutLibraries ships with default composables for each library attribute. These can be overridden by passing your own composables, offering complete control over the UI.
+
+### Library Name
+
+Renders the library's name with styling and maximum lines handled.
+
+```kotlin
+@Composable
+fun DefaultLibraryName(name: String, textStyles: LibraryTextStyles, colors: LibraryColors, typography: Typography) {
+  Text(
+    text = name,
+    style = textStyles.nameTextStyle ?: typography.h6,
+    color = colors.libraryContentColor,
+    maxLines = textStyles.nameMaxLines,
+    overflow = textStyles.nameOverflow
+  )
+}
+```
+
+### Version Badge
+
+Shows the library version as a chip with configurable colors, padding, and shape.
+
+```kotlin
+@Composable
+fun DefaultLibraryVersion(
+    version: String,
+    textStyles: LibraryTextStyles,
+    colors: LibraryColors,
+    typography: Typography,
+    padding: LibraryPadding,
+    dimensions: LibraryDimensions,
+    shapes: LibraryShapes
+) {
+  LibraryChip(
+    modifier = Modifier.padding(padding.versionPadding.containerPadding),
+    minHeight = dimensions.chipMinHeight,
+    backgroundColor = colors.versionChipColors.containerColor,
+    contentColor = colors.versionChipColors.contentColor,
+    shape = shapes.chipShape
+  ) {
+    Text(
+      modifier = Modifier.padding(padding.versionPadding.contentPadding),
+      text = version,
+      style = textStyles.versionTextStyle ?: typography.body2,
+      maxLines = textStyles.versionMaxLines,
+      textAlign = TextAlign.Center,
+      overflow = textStyles.defaultOverflow
+    )
+  }
+}
+```
+
+### Author, Description
+
+Default components for author and description support text styling and truncation.
+
+### License Badge
+
+Renders licenses as interactive chips.
+
+### Funding Badge
+
+Shows funding platforms as chips that are clickable, either opening URLs or triggering custom handlers.
+
+### Interactivity
+
+Click actions can be provided on libraries and funding chips to customize navigation or behavior.
+
+---
+
+## Styling and Theming
+
+Customize colors, dimensions, padding, text styles, and shapes through themed defaults or by passing your own instances.
+
+### Colors
+
+The `LibraryColors` class defines colors for:
+
+- Library background and content
+- Version, license, and funding chip container and content
+- Dialog background, content, and confirm button
+
+You can create custom color sets:
+
+```kotlin
+@Composable
+fun customLibraryColors() = LibraryDefaults.libraryColors(
+    libraryBackgroundColor = Color.White,
+    libraryContentColor = Color.Black,
+    versionChipColors = LibraryDefaults.chipColors(containerColor = Color.LightGray),
+    licenseChipColors = LibraryDefaults.chipColors(containerColor = Color.Blue),
+    fundingChipColors = LibraryDefaults.chipColors(containerColor = Color.Green),
+    dialogBackgroundColor = Color.White,
+    dialogContentColor = Color.DarkGray,
+    dialogConfirmButtonColor = Color.Blue
+)
+```
+
+### Dimensions and Padding
+
+Control spacing and sizing via `LibraryDimensions` and `LibraryPadding`, e.g., chip min height, container padding, and content padding.
+
+### Text Styles
+
+Fine-tune typography for each component with `LibraryTextStyles`. Controls include font size, weight, max lines, and overflow handling.
+
+### Shapes
+
+Shape theming like chip corner shapes is exposed via `LibraryShapes`.
+
+---
+
+## Composable Overrides
+
+The `LibrariesContainer` exposes slots for each subcomponent as composable lambdas. Override one or multiple to change how that portion of the UI renders. Examples:
+
+```kotlin
+LibrariesContainer(
+  libraries = libs,
+  name = { name -> Text(name, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+  version = { version -> Text("v$version", color = Color.Gray) },
+  license = { license -> CustomLicenseChip(license) },
+  funding = null // disables funding badges
+)
+```
+
+All parameters to these composables including colors, padding, textStyles, typography, and shapes are passed in, enabling reuse and blending with your theme.
+
+---
+
+## Extension Hooks and Interaction Handling
+
+Customize user interaction by providing lambdas:
+
+- `onLibraryClick: (Library) -> Unit` — called when a library item is clicked. Intercept and handle navigation or detail display.
+- `onFundingClick: (Funding) -> Unit` — called when funding badges are clicked; default impl opens the funding URL.
+
+Example:
+
+```kotlin
+LibrariesContainer(
+  libraries = libs,
+  onLibraryClick = { lib ->
+    println("Clicked library: ${lib.name}")
+  },
+  onFundingClick = { funding ->
+    // Custom flow to open funding or show modal
+  }
+)
+```
+
+---
+
+## Dialog Customization
+
+The license detail dialog displayed on library click is customizable:
+
+- Use `licenseDialogBody` to override the license details content composable.
+- Change confirm button text with `licenseDialogConfirmText`.
+
+Example of custom license dialog body:
+
+```kotlin
+LibrariesContainer(
+  libraries = libs,
+  licenseDialogBody = { library, modifier ->
+    Text("Custom license info for ${library.name}", modifier = modifier)
+  },
+  licenseDialogConfirmText = "Close"
+)
+```
+
+---
+
+## Best Practices and Tips
+
+- Start with default components and incrementally override to maintain consistency.
+- Use theming APIs for colors, dimensions, and text styles for easier app-wide styling.
+- Dispose of expensive composable overrides that do not depend on runtime data.
+- Provide concise, readable text to avoid truncation issues.
+- Use `onLibraryClick` to manage navigation rather than cloning detail views.
+- Test interaction handlers for null safety and multiple calls.
+
+---
+
+## Troubleshooting
+
+<AccordionGroup title="Common Issues and Solutions">
+<Accordion title="Custom Composable Not Showing">
+Ensure you properly override the corresponding slot parameter and that your composable is being called with the expected arguments.
+</Accordion>
+<Accordion title="Colors Not Updating as Expected">
+Verify that your color overrides are passed correctly and that your theme is applied properly. Use Compose preview and Inspect tool to debug.
+</Accordion>
+<Accordion title="Click Actions Not Triggering">
+Check that `onLibraryClick` or `onFundingClick` are not null and that library items have clickable modifiers enabled.
+</Accordion>
+<Accordion title="Dialog Content Not Customizing">
+Confirm your `licenseDialogBody` is provided and that `LicenseDialog` composable is correctly referenced.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## Related Links
+
+- [LibrariesContainer & LibrariesScaffold API Reference](/api-reference/compose-api/compose-librariescontainer-api)
+- [rememberLibraries Data Loading](/api-reference/compose-api/rememberlibraries-data-loading)
+- [Core Data Models & Access](/api-reference/core-data-models/libs-entity-reference)
+- [Customizing Compose UI Integration Guide](/guides/advanced-integration/compose-customization)
+
+
+---
+
+## Example: Basic Customization of LibrariesContainer
+
+```kotlin
+@Composable
+fun CustomizedLibraries(libraries: Libs) {
+    LibrariesContainer(
+        libraries = libraries,
+        colors = LibraryDefaults.libraryColors(
+            libraryBackgroundColor = Color(0xFFF0F0F0),
+            fundingChipColors = LibraryDefaults.chipColors(
+                containerColor = Color.Magenta,
+                contentColor = Color.White
+            )
+        ),
+        textStyles = LibraryDefaults.libraryTextStyles().copy(
+            nameTextStyle = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        ),
+        onLibraryClick = { library ->
+            // Navigate to custom detail screen
+        },
+        onFundingClick = { funding ->
+            // Handle funding platform click
+        },
+        funding = { funding ->
+            // Override funding chip with icon
+            FundingChipWithIcon(funding = funding)
+        }
+    )
+}
+
+@Composable
+fun FundingChipWithIcon(funding: Funding) {
+    // Compose logic to show funding with icon
+    Text(text = "⭐ ${funding.platform}")
+}
+```
+
+---
+
+By leveraging these customization points, you gain full control over the AboutLibraries Compose component's appearance and interaction patterns, enabling seamless integration into your app's unique design system.
+
+
+---
+
+## Source
+<Source url="https://github.com/mikepenz/AboutLibraries" branch="main" paths={[{"path": "aboutlibraries-compose-m2/src/commonMain/kotlin/com/mikepenz/aboutlibraries/ui/compose/SharedLibraries.kt", "range": "10-240"},{"path": "aboutlibraries-compose-m2/src/commonMain/kotlin/com/mikepenz/aboutlibraries/ui/compose/component/LibraryDefaultComponents.kt", "range": "5-110"}]} />

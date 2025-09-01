@@ -1,0 +1,272 @@
+---
+title: "First App Integration and Usage"
+description: "Demonstrates integrating the generated metadata into your app using the core APIs and modern Compose UI containers. Includes canonical examples for Android (resource loading), Compose multiplatform (resource API and manual loading), and Desktop/Web, with code snippets for both basic and advanced usages."
+---
+
+# First App Integration and Usage
+
+Integrating AboutLibraries into your application brings the valuable benefit of displaying comprehensive third-party library information with minimal effort. This guide demonstrates how to load and present the generated library metadata within your app using the core APIs and modern Compose UI components. You'll find concise, canonical examples tailored for Android, Compose Multiplatform (Desktop, iOS, Wasm), and common UI patterns, complete with practical notes for basic and advanced usage.
+
+---
+
+## 1. Overview
+
+AboutLibraries generates detailed metadata about your third-party dependencies, which you can embed directly into your app's UI. This page focuses on the direct integration of the generated metadata at runtime using the `rememberLibraries` API and the `LibrariesContainer` Compose UI component. These are the foundations for visually presenting open source libraries, licenses, and funding details.
+
+You'll see concrete examples for:
+
+- Android resource loading
+- Compose Multiplatform manual resource loading (Desktop, iOS, Wasm)
+- Customizing display options in the libraries container
+
+The goal is to enable you to deliver a rich, configurable, and user-friendly "About Libraries" experience.
+
+---
+
+## 2. Preparing Your Project
+
+Before integrating, ensure you:
+
+- Have generated the `aboutlibraries.json` metadata file via the Gradle plugin (see [Generating Library Metadata](/getting-started/configuration-and-first-run/generate-metadata))
+- Added AboutLibraries Core and Compose UI dependencies appropriate for your platform
+
+This guide assumes you have completed the previous setup steps and generated the JSON metadata.
+
+---
+
+## 3. Loading Library Metadata at Runtime
+
+### 3.1 Android: Loading from Resources
+
+On Android, include the generated `aboutlibraries.json` as a raw resource (`res/raw/aboutlibraries.json`).
+
+Use the `rememberLibraries` API to load this resource efficiently within your Compose UI.
+
+```kotlin
+val libraries by rememberLibraries(R.raw.aboutlibraries)
+```
+
+This approach provides lazy, memoized loading optimized for Android resource management.
+
+
+### 3.2 Compose Multiplatform (Desktop, iOS, Wasm): Manual Loading
+
+For platforms outside Android, manually load the JSON string from your bundled resources, then pass it to `rememberLibraries`.
+
+Example for Desktop and Wasm:
+
+```kotlin
+import aboutlibraries.app.generated.resources.Res
+import androidx.compose.runtime.getValue
+import com.mikepenz.aboutlibraries.ui.compose.rememberLibraries
+
+val libraries by rememberLibraries {
+    Res.readBytes("files/aboutlibraries.json").decodeToString()
+}
+```
+
+This method reads the JSON file as bytes from your bundled resources and decodes it to a string for consumption.
+
+
+### 3.3 iOS Compose Implementation
+
+Similar to Desktop, use the ComposeUIViewController with manual resource loading:
+
+```kotlin
+import aboutlibraries.app.generated.resources.Res
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import com.mikepenz.aboutlibraries.ui.compose.LibrariesContainer
+import com.mikepenz.aboutlibraries.ui.compose.rememberLibraries
+
+fun MainViewController() = ComposeUIViewController {
+    SampleTheme {
+        Scaffold(
+            topBar = { TopAppBar(title = { Text("AboutLibraries iOS Sample") }) }
+        ) {
+            val libraries by rememberLibraries {
+                Res.readBytes("files/aboutlibraries.json").decodeToString()
+            }
+            LibrariesContainer(libraries, Modifier.fillMaxSize())
+        }
+    }
+}
+```
+
+
+---
+
+## 4. Displaying Libraries with the Compose UI Container
+
+The `LibrariesContainer` Composable offers a ready-to-use UI for rendering your library information with multiple configuration options.
+
+### 4.1 Basic Usage
+
+Once you have the `libraries` data from `rememberLibraries`, simply call:
+
+```kotlin
+LibrariesContainer(
+    libraries = libraries,
+    modifier = Modifier.fillMaxSize()
+)
+```
+
+This displays a scrollable list of your third-party libraries, showing names, authors, license details, and links.
+
+
+### 4.2 Common Configuration Options
+
+You can customize the display by toggling parameters:
+
+| Parameter          | Type    | Description                                       | Default |
+|--------------------|---------|-------------------------------------------------|---------|
+| `showAuthor`       | Boolean | Show library authors                              | true    |
+| `showDescription`  | Boolean | Show library descriptions                         | false   |
+| `showVersion`      | Boolean | Show library version numbers                      | true    |
+| `showLicenseBadges`| Boolean | Show license badges for quick visual recognition | true    |
+| `showFundingBadges`| Boolean | Show funding badges (e.g., OpenCollective)        | true    |
+
+Example:
+
+```kotlin
+LibrariesContainer(
+    libraries = libraries,
+    modifier = Modifier.fillMaxSize(),
+    showAuthor = true,
+    showDescription = true,
+    showVersion = true,
+    showLicenseBadges = false,
+    showFundingBadges = false
+)
+```
+
+
+### 4.3 Adding Headers, Dividers, and Footers
+
+For richer UI, the container supports header, footer, and divider composable slots.
+
+Example with a header, footer, and a Material3 horizontal divider:
+
+```kotlin
+LibrariesContainer(
+    libraries = libraries,
+    modifier = Modifier.fillMaxSize().padding(it),
+    showFundingBadges = false,
+    header = {
+        item {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Hello Header", maxLines = 1)
+            }
+        }
+    },
+    divider = { HorizontalDivider() },
+    footer = {
+        item {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Hello Footer", maxLines = 1)
+            }
+        }
+    }
+)
+```
+
+This allows you to customize the UI layout around your libraries list.
+
+---
+
+## 5. Full Code Example for Android (Compose Material3)
+
+```kotlin
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AboutLibrariesScreen() {
+    val libraries by rememberLibraries(R.raw.aboutlibraries)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Open Source Libraries") })
+        }) { contentPadding ->
+
+        LibrariesContainer(
+            libraries = libraries,
+            modifier = Modifier.fillMaxSize().padding(contentPadding),
+            showAuthor = true,
+            showVersion = true,
+            showDescription = false,
+            showLicenseBadges = true
+        )
+    }
+}
+```
+
+---
+
+## 6. Tips and Best Practices
+
+- **Bundle your `aboutlibraries.json` carefully:** Ensure the generated JSON is included correctly in your app resources or assets for all target platforms.
+- **Use `rememberLibraries` caching:** This hook memoizes the parsed metadata, preventing redundant loading and conserving resources.
+- **Customize visibility:** Adjust display flags to suit your app's UI needs and avoid cluttering the interface.
+- **Leverage headers and footers:** Use these slots to provide context or branding around your libraries list.
+- **Disable funding badges if not applicable:** Some projects don't want to show funding info, which can be turned off.
+
+---
+
+## 7. Common Pitfalls
+
+- **Metadata not found:** Confirm that `aboutlibraries.json` is correctly generated and accessible inside your app package.
+- **Resource loading failures:** On multiplatform targets, ensure your resource reading code references the correct path and packaging method.
+- **UI flickering or lag:** Avoid loading libraries metadata on the main thread repeatedly by using `rememberLibraries`.
+- **Outdated JSON:** Regenerate your metadata when dependencies change.
+
+---
+
+## 8. Troubleshooting
+
+<Tip>
+If the libraries list does not show or appears empty:
+
+- Verify that the `aboutlibraries.json` file is present in your expected resource location.
+- On Android, ensure it is under `res/raw` and referenced by the correct resource ID.
+- On Desktop/iOS/Wasm, verify the resource path used with `Res.readBytes()`.
+- Check logs for exceptions during JSON parsing.
+- Use debugger or print statements inside your Composables to confirm data loading.
+</Tip>
+
+<Tip>
+If compilation fails due to missing dependencies:
+
+- Confirm that your build script includes AboutLibraries core and UI dependencies for your platform.
+- For Compose Multiplatform projects, include the Compose UI module.
+- For Android, confirm Gradle plugin setup and sync.
+</Tip>
+
+---
+
+## 9. Next Steps
+
+- Explore the [Compose UI API Documentation](/api-reference/compose-api/compose-librariescontainer-api) for deep customization options.
+- Learn about [Generating Library Metadata](/getting-started/configuration-and-first-run/generate-metadata) to automate data generation.
+- Review [Plugin Configuration](/getting-started/configuration-and-first-run/plugin-configuration) for build setup.
+- Investigate multiplatform integration guides for Web and iOS.
+
+---
+
+## 10. References
+
+- [Generating Library Metadata](https://your-docs-domain/getting-started/configuration-and-first-run/generate-metadata)
+- [Plugin Configuration](https://your-docs-domain/getting-started/configuration-and-first-run/plugin-configuration)
+- [Compose UI API](https://your-docs-domain/api-reference/compose-api/compose-librariescontainer-api)
+- [System Architecture Overview](https://your-docs-domain/overview/architecture-core-concepts/system-architecture)
+
+---
+
+By following the steps and examples here, you are now equipped to seamlessly embed AboutLibraries metadata into your app’s UI, creating an informative and trustworthy open-source attribution experience for your users.
