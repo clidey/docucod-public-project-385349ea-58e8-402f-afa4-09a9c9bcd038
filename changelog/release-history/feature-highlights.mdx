@@ -1,0 +1,104 @@
+---
+title: "Feature Highlights & Improvements"
+description: "Summarizes the most impactful new features and improvements for every major and minor release. Get a digestible overview of what’s new, from multiplatform support to Compose UI enhancements, so you can leverage the latest functionality with minimal friction."
+---
+
+# Feature Highlights & Improvements
+
+Discover the most impactful features and improvements introduced in every major and minor release of AboutLibraries. This page offers a clear, concise overview of enhancements—from broad multiplatform support to Compose UI advancements—helping you quickly understand what's new and leverage the latest functionality with minimal effort.
+
+---
+
+## 1. Evolution of Multiplatform Support
+
+AboutLibraries has steadily expanded its compatibility across platforms, empowering you to easily integrate license and dependency data regardless of target environment.
+
+- **Android:** Continuous improvements solidify native Android support, ensuring seamless integration with Gradle and Android build systems.
+- **Desktop:** Support for JVM desktop targets using Compose Desktop enables rich, native-like experiences beyond mobile.
+- **iOS:** Inclusion of iOS frameworks facilitates license metadata usage on Apple devices.
+- **WASM and JavaScript:** Experimental support for WebAssembly and JavaScript broadens integration possibilities for web and cross-platform apps.
+
+These expansions unlock new use cases and deliver consistent user experiences across your entire app ecosystem.
+
+## 2. Compose UI Enhancements
+
+The Compose UI integration has seen significant growth, reflecting user demand for better, customizable visualizations.
+
+- **LibrariesContainer & LibrariesScaffold:** Refined composables offer flexible layout and interaction patterns for presenting dependency and license data elegantly.
+- **Customization:** New capabilities enable overriding default components such as library names, license tags, and funding badges to align with app branding.
+- **Preview Tooling:** Enhanced tooling support makes it easier to preview changes in development environments, speeding up UI design iterations.
+- **Theming and Styling:** Robust theme options empower you to customize colors, dimensions, typography, and shapes, creating a cohesive design.
+
+These improvements streamline incorporating open source notices into your app’s UI with an emphasis on user-friendly interfaces and adaptability.
+
+## 3. Enhanced License Compliance Features
+
+Maintaining legal compliance is paramount, and AboutLibraries continues to strengthen tooling around licenses.
+
+- **Strict Mode Enforcement:** Automatic build failures occur if unauthorized licenses are detected, allowing early remediation.
+- **Fine-Grained Controls:** Customizable allowed license lists, including per-dependency overrides, give precise compliance management.
+- **Remote License Fetching:** Optional enrichment using GitHub API enhances license accuracy and coverage.
+- **Duplication Handling:** Smarter rules for linking or merging duplicate licenses and libraries avoid redundant entries, simplifying reports.
+
+These features mitigate risks, assuring that license usage aligns with your organization's policies.
+
+## 4. Gradle Plugin and Build Process Improvements
+
+The Gradle plugin central to AboutLibraries' automation continues to evolve for better reliability and integration.
+
+- **Flexible Output Configuration:** Define multiple output targets for library metadata JSON files across various source sets and native targets.
+- **Variant Filtering:** Export metadata specific to desired Gradle build variants, optimizing build artifacts.
+- **Offline Mode:** Disable remote data fetching during exports to improve build stability and repeatability.
+- **Duplication & Filtering Rules:** Configurable modes and rules reduce conflicts and manage dependencies smartly.
+- **Support for Multiple Compose Versions:** Support is extended for Compose Material 2 and 3 libraries, accommodating diverse project needs.
+
+These changes simplify your build pipeline and ensure metadata is both accurate and efficiently generated.
+
+## 5. Real-World Use Case: Creating a License Display Interface
+
+Imagine an app developer preparing an Android and Desktop app to display third-party notices:
+
+1. **Generate Metadata:** Using the Gradle plugin, the developer exports `aboutlibraries.json` tailored to each target
+1. **Runtime Loading:** Compose UI functions like `rememberLibraries` load this metadata dynamically
+1. **Render UI:** Using `LibrariesContainer`, the app displays an interactive, searchable list of libraries with licenses and funding information
+1. **Customize UI:** The developer overrides components to match app branding and adds dialog details for licenses
+1. **Ensure Compliance:** Strict mode triggers build failure on unapproved licenses, enforcing policy automatically
+
+By following this flow, the developer delivers legally compliant, visually attractive attribution with minimal manual effort.
+
+## 6. Troubleshooting and Best Practices
+
+Effectively leveraging these features means adopting these best practices and addressing common issues:
+
+- **Validate Plugin Setup:** Confirm Gradle plugin configuration includes correct paths and variant filters for intended platforms.
+- **Preview UI Changes:** Use Compose tooling previews frequently during UI customization to confirm results.
+- **License Lists:** Maintain accurate allowed license collections in your build script to prevent unexpected build failures.
+- **Metadata Regeneration:** Regularly update metadata to capture changes in project dependencies.
+- **Handling Duplicates:** Use duplication rules to merge related libraries and avoid clutter in UI displays.
+
+For detailed troubleshooting, consult the [Common Installation and Build Errors](https://docs.aboutlibraries.com/getting-started/troubleshooting/common-errors-fixes) and [Troubleshooting Common Scenarios](https://docs.aboutlibraries.com/guides/best-practices-workarounds/troubleshooting-common-scenarios).
+
+---
+
+## Additional Resources
+
+- [Release History & Version Timeline](/changelog/release-history/version-timeline) — Track all notable product releases chronologically.
+- [Breaking Changes & Migration Guides](/changelog/breaking-changes-migration/migration-guides) — Prepare your projects for any major upgrades.
+- [Compose UI API Reference](/api-reference/compose-api/compose-librariescontainer-api) — Deep dive into the Compose UI components.
+- [Gradle Plugin Configuration Guide](/getting-started/configuration-and-first-run/plugin-configuration) — Configure and customize the Gradle plugin effectively.
+
+---
+
+By exploring this page, you gain a clear lens into how AboutLibraries continues improving your legal compliance workflow and UI integration, equipping your team for faster, safer, and more elegant open source license attribution.
+
+---
+
+_Last Updated: June 2024_
+
+<Check>
+Make sure to regularly update your `aboutlibraries.json` metadata and keep your Compose UI versions in sync to maximize the benefits from these new features.
+</Check>
+
+<Note>
+For complex apps targeting multiple platforms, leverage the flexible export and runtime loading features to streamline your licensing info display everywhere.
+</Note>
