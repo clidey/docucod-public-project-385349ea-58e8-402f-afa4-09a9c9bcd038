@@ -1,0 +1,290 @@
+---
+title: "Platform-Specific Setup Issues"
+description: "Covers issues unique to Android (resource packaging), Compose Multiplatform (resource loading paths), and Desktop/Wasm builds, with tips for correcting file placements, plugin misconfigurations, and variant targeting."
+---
+
+# Platform-Specific Setup Issues
+
+This guide addresses issues unique to specific platforms when integrating AboutLibraries. It covers common pitfalls and troubleshooting tips related to Android (resource packaging), Compose Multiplatform (resource loading paths), and Desktop/Wasm builds. You’ll find actionable guidance on correcting file placements, resolving plugin misconfigurations, and managing variant targeting for smooth setup and runtime behavior.
+
+---
+
+## 1. Android-Specific Issues: Resource Packaging
+
+When using AboutLibraries with Android applications, proper resource packaging is crucial to ensure the metadata file (`aboutlibraries.json`) is found and loaded correctly at runtime.
+
+### Common Issue: `aboutlibraries.json` Not Found or Missing Data
+
+This typically happens if the `aboutlibraries.json` file is not correctly placed or not packaged in the APK.
+
+### How to Fix
+
+1. **Place `aboutlibraries.json` in the Right Location:**
+   - It must be located under `src/androidMain/composeResources/files/` if you use Compose.
+
+2. **Check Gradle Export Configuration:**
+   - Confirm in your `build.gradle.kts` under the AboutLibraries plugin configuration that the output file paths point to `src/androidMain/composeResources/files/aboutlibraries.json`:
+
+   ```kotlin
+   aboutLibraries {
+       export {
+           prettyPrint = true
+           outputFile = file("src/androidMain/composeResources/files/aboutlibraries.json")
+       }
+   }
+   ```
+
+3. **Enable View Binding and Packaging Options:**
+   - Ensure in your Android block you enable `viewBinding = true`.
+   - Exclude unwanted files that may conflict with resource packaging:
+
+   ```kotlin
+   android {
+       buildFeatures {
+           viewBinding = true
+       }
+       packaging {
+           resources {
+               excludes.add("META-INF/library-core_release.kotlin_module")
+               excludes.add("META-INF/library_release.kotlin_module")
+           }
+       }
+   }
+   ```
+
+4. **Variant Targeting:**
+   - When using build variants, ensure AboutLibraries collects metadata from the correct variant(s).
+   - By default, it collects all, but filtering is possible:
+
+   ```kotlin
+   aboutLibraries {
+       collect {
+           // filterVariants.addAll("debug")
+       }
+   }
+   ```
+
+### Verification
+
+- After building, check the APK or app bundle contents.
+- Look inside the `assets` or `composeResources/files` for the presence of `aboutlibraries.json`.
+
+### Troubleshooting Tips
+
+- If using flavors or multiple build variants, verify all variants have the AboutLibraries plugin applied and configured accordingly.
+- In case resource collisions occur, clean the build and rebuild to remove stale generated files.
+
+---
+
+## 2. Compose Multiplatform Issues: Resource Loading Paths
+
+When targeting Compose Multiplatform for Desktop, iOS, or Wasm, correctly loading the metadata JSON at runtime requires attention to resource location and package setup.
+
+### Typical Problem: Metadata File Not Found at Runtime
+
+Compose UI components rely on loading the JSON file from specific resource paths. Incorrect file placement or Gradle setup often leads to a failure to locate metadata.
+
+### How to Fix
+
+1. **Place Metadata Files Appropriately per Target:**
+   - For Desktop: place under `src/desktopMain/composeResources/files/aboutlibraries.json`.
+   - For Wasm: place under `src/wasmJsMain/composeResources/files/aboutlibraries.json`.
+   - For iOS: under `src/iosMain/resources` (if applicable).
+
+2. **Configure Export in Gradle:**
+
+   ```kotlin
+   aboutLibraries {
+       exports {
+           create("desktop") {
+               prettyPrint = true
+               outputFile = file("src/desktopMain/composeResources/files/aboutlibraries.json")
+           }
+           create("wasmJs") {
+               prettyPrint = true
+               outputFile = file("src/wasmJsMain/composeResources/files/aboutlibraries.json")
+           }
+       }
+   }
+   ```
+
+3. **Ensure SourceSets Include Resources:**
+
+   Verify your Kotlin multiplatform sourceSets include the resource folders:
+
+   ```kotlin
+   kotlin {
+       sourceSets {
+           val desktopMain by getting {
+               resources.srcDir("src/desktopMain/composeResources")
+           }
+           val wasmJsMain by getting {
+               resources.srcDir("src/wasmJsMain/composeResources")
+           }
+       }
+   }
+   ```
+
+4. **Check Package Names and Namespaces:**
+
+   Confirm your Android/Multiplatform namespaces match those expected by the build system to avoid resource loading issues.
+
+5. **Wasm Specifics:**
+
+   - When building for Wasm, `outputModuleName` and webpack config must be set correctly.
+   - Exported JSON location should sync with served resource paths in your web server or dev environment.
+
+### Troubleshooting Tips
+
+- Run your app in debug mode and inspect logs for errors related to resource loading.
+- Use your IDE’s resource inspector or file explorer in build outputs to verify file presence.
+- Consult Compose Multiplatform Gradle plugin warnings or errors indicating resource path problems.
+
+---
+
+## 3. Desktop and Wasm Build Issues
+
+Desktop and Wasm targets have additional complexities related to binary outputs and resource access.
+
+### Common Problems
+
+- Missing or incorrectly bundled `aboutlibraries.json`.
+- Incorrect `outputModuleName` or webpack configuration for Wasm.
+- Unsupported or missing dependencies causing build or runtime failures.
+
+### How to Fix
+
+1. **Desktop Build Setup:**
+
+   - Ensure in your `build.gradle.kts` the desktop target includes Compose dependencies and resources:
+
+   ```kotlin
+   kotlin {
+       jvm("desktop")
+       sourceSets {
+           val desktopMain by getting {
+               dependencies {
+                   implementation(compose.desktop.currentOs)
+               }
+           }
+       }
+   }
+   ```
+
+   - Confirm that AboutLibraries exports metadata for desktop:
+
+   ```kotlin
+   aboutLibraries {
+       exports {
+           create("desktop") {
+               prettyPrint = true
+               outputFile = file("src/desktopMain/composeResources/files/aboutlibraries.json")
+           }
+       }
+   }
+   ```
+
+2. **Wasm Build Setup:**
+
+   - Use `wasmJs` target with appropriate configuration:
+
+   ```kotlin
+   kotlin {
+       wasmJs {
+           binaries.executable()
+           browser {
+               commonWebpackConfig {
+                   outputFileName = "composeApp.js"
+               }
+           }
+       }
+   }
+   ```
+
+   - Confirm AboutLibraries exports metadata to:
+
+   ```kotlin
+   aboutLibraries {
+       exports {
+           create("wasmJs") {
+               prettyPrint = true
+               outputFile = file("src/wasmJsMain/composeResources/files/aboutlibraries.json")
+           }
+       }
+   }
+   ```
+
+3. **Dependency Version Conflicts:**
+
+   - Ensure you use compatible versions of Kotlin, Compose, and AboutLibraries.
+   - Use Gradle's `resolutionStrategy` to enforce consistent versions:
+
+   ```kotlin
+   configurations.configureEach {
+       resolutionStrategy.force(libs.fastAdapter.core)
+       resolutionStrategy.force(libs.iconics.core)
+   }
+   ```
+
+4. **Exclude Unnecessary Transitive Dependencies:**
+
+   For Compose modules, exclude irrelevant Android dependencies such as AppCompat:
+
+   ```kotlin
+   configurations.configureEach {
+       exclude(group = "androidx.appcompat")
+       exclude(group = "com.google.android.material", module = "material")
+   }
+   ```
+
+### Troubleshooting Tips
+
+- For Wasm, verify the generated `composeApp.js` includes the resource loading logic.
+- For Desktop, verify the packaged native distribution includes the JSON.
+- Use IDE build logs and runtime error messages to trace the root cause.
+
+---
+
+## 4. Best Practices Across Platforms
+
+- **Always verify the output path and resource inclusion for your target platform.**
+- **Consistency:** Keep your dependency versions aligned across modules to avoid conflicts.
+- **Variant awareness:** When dealing with Android variants or flavors, ensure AboutLibraries metadata export matches those variants.
+- **Resources:** Use the `composeResources/files` folder convention for Compose-based projects.
+- **Clean builds:** After configuration changes, perform a full clean and rebuild to avoid stale files causing errors.
+
+---
+
+## 5. Additional Resources
+
+- [Generating Library Metadata](https://docs.aboutlibraries.com/getting-started/configuration-and-first-run/generate-metadata) – Guide on exporting and placing JSON metadata.
+- [First App Integration and Usage](https://docs.aboutlibraries.com/getting-started/configuration-and-first-run/first-app-integration) – Details on loading and displaying libraries metadata in your app.
+- [Common Installation and Build Errors](https://docs.aboutlibraries.com/getting-started/troubleshooting/common-errors-fixes) – General troubleshooting for plugin and build issues.
+- [Quick Validation Checklist](https://docs.aboutlibraries.com/getting-started/configuration-and-first-run/quick-validation) – Platform-specific validation steps to confirm a successful setup.
+
+---
+
+For comprehensive understanding of integration points and architecture, review the [Ecosystem & Integration Points](https://docs.aboutlibraries.com/overview/architecture-core-concepts/integration-points) documentation.
+
+---
+
+If you encounter platform-specific issues not covered here, please consult the community forums or submit an issue on the [GitHub repository](https://github.com/mikepenz/AboutLibraries).
+
+---
+
+<br/>
+_Last updated in branch: main_
+
+---
+
+<Check>
+Ensure your `aboutlibraries.json` files are correctly located per platform to avoid runtime loading issues.
+</Check>
+
+<Warning>
+Misconfigured Gradle exports or resource placements are the leading cause of platform-specific runtime failures. Double-check file paths and build variants.
+</Warning>
+
+<Tip>
+When troubleshooting resource issues, always perform a clean build and inspect the build artifact contents before running your app.
+</Tip>
