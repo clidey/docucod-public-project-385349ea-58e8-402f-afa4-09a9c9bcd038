@@ -1,0 +1,232 @@
+---
+title: "rememberLibraries Data Loading"
+description: "Reference for rememberLibraries and related state/scoping mechanisms for loading metadata in Compose. Covers platform-specific data providers, raw resource and JSON loading strategies, and efficient state management for UI updates."
+---
+
+# rememberLibraries Data Loading API Reference
+
+This page provides an in-depth reference for the `rememberLibraries` API and related state management techniques used to efficiently load and manage library metadata in Compose UI. It covers platform-specific loading strategies, raw JSON and resource file consumption, and best practices for state scoping to ensure responsive and lightweight UI updates.
+
+---
+
+## Overview
+
+The `rememberLibraries` functions provide Compose-friendly mechanisms to load and hold library metadata represented by the `Libs` container class. This metadata is typically generated via the AboutLibraries Gradle plugin and delivered as JSON resources. The API abstracts away platform-specific resource access and asynchronous loading, encapsulating the metadata into Compose `State<Libs?>` objects that update the UI reactively.
+
+### Key Benefits
+
+- Seamlessly integrates asynchronous metadata loading into Compose UI lifecycle.
+- Supports Android resource loading, raw JSON strings, and multiplatform scenarios (including Desktop, iOS, WASM).
+- Utilizes `produceState` to efficiently trigger recompositions when data is available.
+- Abstracts platform differences so users can focus on rendering UI with up-to-date library information.
+
+---
+
+## rememberLibraries API Variants
+
+The API includes several overloaded `rememberLibraries` functions tailored for different input scenarios and platforms.
+
+### 1. Android Context-Based Loading
+
+```kotlin
+@Composable
+fun rememberLibraries(
+    block: suspend (Context) -> Libs = { context ->
+        Libs.Builder().withContext(context).build()
+    },
+): State<Libs?>
+```
+
+- **Description:** Loads the `Libs` instance asynchronously by executing a suspending block with the Android `Context`. By default, this loads from the Android raw resource named `aboutlibraries`.
+- **Usage:** Allows custom loading strategies using Android APIs.
+
+#### Example
+
+```kotlin
+val libraries by rememberLibraries { context ->
+    Libs.Builder()
+        .withContext(context)
+        .build()
+}
+```
+
+#### Notes
+- Ensure R8 does not obfuscate the `aboutlibraries` raw resource identifier if relying on the default resource naming.
+
+
+### 2. Android Raw Resource Loading
+
+```kotlin
+@Composable
+fun rememberLibraries(
+    @RawRes resId: Int
+): State<Libs?>
+```
+
+- **Description:** Loads the libraries metadata directly from a specified raw resource ID containing JSON.
+
+#### Example
+
+```kotlin
+val libraries by rememberLibraries(R.raw.aboutlibraries)
+```
+
+This variant simplifies usage when your JSON metadata is stored in a specific raw resource file.
+
+---
+
+### 3. JSON String and Byte Array Loading (Common / Multiplatform)
+
+```kotlin
+@Composable
+fun rememberLibraries(
+    libraries: String
+): State<Libs?>
+
+@Composable
+fun rememberLibraries(
+    libraries: ByteArray
+): State<Libs?>
+
+@Composable
+fun rememberLibraries(
+    block: suspend () -> String
+): State<Libs?>
+```
+
+- **Description:** These variants accept raw JSON strings or byte arrays containing the `aboutlibraries.json` metadata, or a suspending block returning a JSON string. These are highly useful for multiplatform Compose targets like Desktop, iOS, or WASM where resources might be loaded from files or network.
+
+#### Common Use Case Example
+
+```kotlin
+val libraries by rememberLibraries {
+    loadJsonFromFile() // suspending function returning JSON string
+}
+```
+
+Or for ByteArray input:
+
+```kotlin
+val libraries by rememberLibraries(libraryJsonByteArray)
+```
+
+---
+
+## How rememberLibraries Works
+
+Under the hood, all these `rememberLibraries` functions leverage Compose's `produceState` API, which launches a coroutine to asynchronously load the `Libs` data on a background dispatcher (typically `Dispatchers.IO` or `Dispatchers.Default`). Once loaded, the data is assigned to the `State` object, automatically triggering any recompositions of UI components reading this state.
+
+This pattern:
+
+- Keeps UI responsive by offloading IO.
+- Facilitates reactive UI architecture.
+- Encapsulates loading logic within a stable Compose API.
+
+---
+
+## Practical User Flow for Loading Libraries
+
+1. **Declare a `rememberLibraries` invocation in your Composable:**
+
+   Bind the metadata resource specific to your platform (e.g., Android context or multiplatform string resource).
+
+2. **Observe the returned `State<Libs?>`:**
+
+   Access this state via `by` delegation to get the current `Libs` instance or null (if still loading).
+
+3. **Pass `Libs` instance to UI components like `LibrariesContainer`:**
+
+   This automatically reacts to loading completion and updates the UI.
+
+
+### Example: Android Composable Using rememberLibraries
+
+```kotlin
+@Composable
+fun LibraryScreen() {
+    val libraries by rememberLibraries() // Loads by default from Android resources
+    if (libraries != null) {
+        LibrariesContainer(libraries = libraries)
+    } else {
+        // Show loading indicator
+    }
+}
+```
+
+### Example: Multiplatform Desktop or WASM
+
+```kotlin
+val libraries by rememberLibraries {
+    // Load aboutlibraries.json from file or resources
+    fetchJsonFromResource()
+}
+LibrariesContainer(libraries)
+```
+
+---
+
+## Best Practices & Tips
+
+- **Use appropriate loading variant:** Choose the variant of `rememberLibraries` that best fits how your metadata is available (e.g., raw resource, JSON string, or suspending block).
+- **Guard UI usage:** Always check for `null` on the returned state to avoid UI errors during loading.
+- **Prevent R8 obfuscation on Android:** If relying on raw resource names, configure your minification tools to keep resource identifiers.
+- **Leverage Compose `State` for recomposition:** Do not manually trigger UI refresh; rely on the `produceState` mechanism.
+- **Consider caching:** In multiplatform environments, load your metadata once and reuse to reduce IO overhead.
+
+---
+
+## Common Pitfalls & Troubleshooting
+
+<Tip>
+
+- **Loading returns null indefinitely?** Verify your JSON resource file is correctly bundled and accessible.
+- **R8 stripping `aboutlibraries` resource?** Add ProGuard rules to keep raw resource names:
+
+  ```pro
+  -keepresourcefiles res/raw/aboutlibraries.json
+  ```
+
+- **Performance degradation on large metadata?** Offload heavy loading operations to background threads via the `block` parameter.
+- **JSON syntax errors?** Validate your `aboutlibraries.json` file by testing deserialization with `Libs.Builder().withJson()` separately.
+
+</Tip>
+
+---
+
+## Related API & Documentation Links
+
+- [`Libs` Main Container and Builder](../core-data-models/libs-entity-reference) — Details on the core data model.
+- [`LibrariesContainer` Compose UI Component](../compose-api/compose-librariescontainer-api) — Rendering the libraries list with customizable UI.
+- [First App Integration Guide](../../getting-started/configuration-and-first-run/first-app-integration) — Practical examples for loading and displaying libraries.
+- [Multiplatform Use Cases Guide](../../guides/advanced-integration/multiplatform-use-cases) — Platform-specific loading techniques.
+
+---
+
+## Summary
+
+The `rememberLibraries` suite is essential for efficiently integrating AboutLibraries metadata into your Compose UI across Android and multiplatform environments. By abstracting asynchronous loading and state management, it empowers developers to build responsive, reactive UIs presenting third-party library information seamlessly.
+
+---
+
+## Code Example Consolidation
+
+<CodeGroup>
+```kotlin
+// Android default resource loading
+val libraries by rememberLibraries()
+```
+```kotlin
+// Android explicit raw resource loading
+val libraries by rememberLibraries(R.raw.aboutlibraries)
+```
+```kotlin
+// Multiplatform JSON string loading
+val libraries by rememberLibraries(libsJsonString)
+```
+```kotlin
+// Multiplatform async JSON loading
+val libraries by rememberLibraries {
+    readTextFromFile() // suspend function returning string
+}
+```
+</CodeGroup>
