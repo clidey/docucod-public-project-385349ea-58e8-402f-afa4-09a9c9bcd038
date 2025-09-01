@@ -1,0 +1,169 @@
+{
+  "background": {
+    "decoration": "gradient"
+  },
+  "colors": {
+    "dark": "#1E3A8A",
+    "light": "#60A5FA",
+    "primary": "#60A5FA"
+  },
+  "favicon": "/favicon.svg",
+  "fonts": {
+    "family": "Montserrat",
+    "format": "woff2",
+    "source": "https://fonts.gstatic.com/s/googlesansflex/v5/t5sJIQcYNIWbFgDgAAzZ34auoVyXkJCOvp3SFWJbN5hF8Ju1x6sKCyp0l9sI40swNJwGpVd4AZzz0v6lJ4qFXNZhGjLvDSkV4USKMo6qQzwliVdHAy9jxTDHg_ugnAakpwGc-cxgUqDCIUI.woff2"
+  },
+  "icons": {
+    "library": "fontawesome"
+  },
+  "logo": {
+    "dark": "./logo/logo.svg",
+    "light": "./logo/logo.svg"
+  },
+  "name": "AboutLibraries",
+  "navigation": {
+    "tabs": [
+      {
+        "groups": [
+          {
+            "group": "Product Introduction",
+            "pages": [
+              "overview/aboutlibraries-intro/what-is-aboutlibraries",
+              "overview/aboutlibraries-intro/value-proposition",
+              "overview/aboutlibraries-intro/target-audience-use-cases",
+              "overview/aboutlibraries-intro/feature-summary"
+            ]
+          },
+          {
+            "group": "Architecture \u0026 Core Concepts",
+            "pages": [
+              "overview/architecture-core-concepts/system-architecture",
+              "overview/architecture-core-concepts/component-map",
+              "overview/architecture-core-concepts/core-terminology",
+              "overview/architecture-core-concepts/integration-points"
+            ]
+          }
+        ],
+        "tab": "Overview"
+      },
+      {
+        "groups": [
+          {
+            "group": "Prerequisites \u0026 Installation",
+            "pages": [
+              "getting-started/prerequisites-installation/system-requirements",
+              "getting-started/prerequisites-installation/install-gradle-plugin",
+              "getting-started/prerequisites-installation/add-library-dependencies"
+            ]
+          },
+          {
+            "group": "Configuration and First Run",
+            "pages": [
+              "getting-started/configuration-and-first-run/plugin-configuration",
+              "getting-started/configuration-and-first-run/generate-metadata",
+              "getting-started/configuration-and-first-run/first-app-integration",
+              "getting-started/configuration-and-first-run/quick-validation"
+            ]
+          },
+          {
+            "group": "Troubleshooting \u0026 Common Issues",
+            "pages": [
+              "getting-started/troubleshooting/common-errors-fixes",
+              "getting-started/troubleshooting/platform-specific-troubleshooting"
+            ]
+          }
+        ],
+        "tab": "Getting Started"
+      },
+      {
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "guides/getting-started/setup-gradle-plugin",
+              "guides/getting-started/exporting-metadata",
+              "guides/getting-started/visualizing-libraries"
+            ]
+          },
+          {
+            "group": "Advanced Integration",
+            "pages": [
+              "guides/advanced-integration/compose-customization",
+              "guides/advanced-integration/multiplatform-use-cases",
+              "guides/advanced-integration/modifying-library-license-info",
+              "guides/advanced-integration/ci-and-enterprise"
+            ]
+          },
+          {
+            "group": "Best Practices \u0026 Troubleshooting",
+            "pages": [
+              "guides/best-practices-workarounds/compliance-and-license-strict-mode",
+              "guides/best-practices-workarounds/advanced-gradle-examples",
+              "guides/best-practices-workarounds/troubleshooting-common-scenarios"
+            ]
+          }
+        ],
+        "tab": "Guides"
+      },
+      {
+        "groups": [
+          {
+            "group": "Core Data Models \u0026 Access",
+            "pages": [
+              "api-reference/core-data-models/libs-entity-reference",
+              "api-reference/core-data-models/library-license-entities",
+              "api-reference/core-data-models/data-parsing-serialization"
+            ]
+          },
+          {
+            "group": "Compose UI API",
+            "pages": [
+              "api-reference/compose-api/compose-librariescontainer-api",
+              "api-reference/compose-api/rememberlibraries-data-loading",
+              "api-reference/compose-api/compose-components-customization"
+            ]
+          },
+          {
+            "group": "Gradle Plugin API",
+            "pages": [
+              "api-reference/gradle-plugin-api/plugin-tasks-and-configuration",
+              "api-reference/gradle-plugin-api/plugin-entity-mapping-utilities"
+            ]
+          },
+          {
+            "group": "Legacy View-Based API (Deprecated)",
+            "pages": [
+              "api-reference/legacy-view-api/legacy-libs-builder",
+              "api-reference/legacy-view-api/legacy-activity-fragment-items"
+            ]
+          }
+        ],
+        "tab": "API Reference"
+      },
+      {
+        "groups": [
+          {
+            "group": "Release History \u0026 Highlights",
+            "pages": [
+              "changelog/release-history/version-timeline",
+              "changelog/release-history/feature-highlights",
+              "changelog/release-history/bug-fixes-patches"
+            ]
+          },
+          {
+            "group": "Breaking Changes \u0026 Migration Guidance",
+            "pages": [
+              "changelog/breaking-changes-migration/breaking-changes",
+              "changelog/breaking-changes-migration/migration-guides"
+            ]
+          }
+        ],
+        "tab": "Changelog"
+      }
+    ]
+  },
+  "styling": {
+    "codeblocks": "dark",
+    "eyebrows": "breadcrumbs"
+  }
+}
