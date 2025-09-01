@@ -1,0 +1,167 @@
+---
+title: "Common Installation and Build Errors"
+description: "Documents typical errors such as plugin application failures, incompatible Gradle versions, missing metadata files, or dependency conflicts. Provides typical error messages, quick diagnostics, and practical resolutions."
+---
+
+# Common Installation and Build Errors
+
+This guide addresses typical installation and build errors you may encounter when setting up AboutLibraries, particularly focusing on Gradle plugin application failures, incompatible Gradle versions, missing metadata files, and dependency conflicts. By following the diagnostic steps and resolutions here, you'll minimize setup issues and accelerate successful integration.
+
+---
+
+## 1. Plugin Application Failures
+
+### Symptom
+- Gradle build fails with errors indicating the AboutLibraries plugin could not be applied.
+- Error messages such as `Plugin with id 'com.mikepenz.aboutlibraries' not found` or classpath related errors.
+
+### Diagnosis & Fix
+- **Verify Gradle Plugin Declaration:** Ensure your root `build.gradle.kts` or module `build.gradle.kts` includes the AboutLibraries plugin in the plugins block or classpath dependencies.
+- **Correct Plugin ID:** The expected plugin ID is `com.mikepenz.aboutlibraries.plugin` or for Android module `com.mikepenz.aboutlibraries.plugin.android` depending on your target. Using incorrect plugin IDs leads to application failure.
+- **Plugin Version and Repository:** Make sure your project has access to `mavenCentral()` or the appropriate repository where AboutLibraries plugin artifacts reside.
+- **Sync and Refresh:** After making changes, re-sync the Gradle project and restart the IDE if necessary.
+
+### Example Plugin Declaration in `build.gradle.kts`:
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin") version "<latest-version>"
+}
+```
+
+### Troubleshooting Tips
+- Check your Gradle `settings.gradle.kts` includes `pluginManagement` with repositories that support plugin resolution.
+- Use the latest stable Gradle version compatible with the plugin.
+
+---
+
+## 2. Incompatible Gradle or Kotlin Versions
+
+### Symptom
+- Build fails or crashes with compatibility errors related to Gradle or Kotlin versions.
+- Errors might mention unsupported API levels or missing Kotlin stdlib symbols.
+
+### Diagnosis & Fix
+- **Check Gradle Version:** AboutLibraries requires a minimum Gradle version compatible with your Android Gradle Plugin and Kotlin versions.
+- **Update Kotlin Version:** Ensure Kotlin compiler and standard libraries match or exceed versions declared in AboutLibraries dependencies (e.g., Kotlin 1.5+).
+- **Align Android Gradle Plugin (AGP):** Confirm AGP version matches compatibility notes for your Gradle and Kotlin setup.
+
+### Recommended Versions
+| Component              | Minimum Version  |
+|-----------------------|------------------|
+| Gradle                | 7.0 or higher    |
+| Kotlin                | 1.5.0 or higher  |
+| Android Gradle Plugin | 4.2.0 or higher  |
+
+### How to Upgrade
+- Modify the `gradle-wrapper.properties` to update Gradle.
+- Update Kotlin versions in `build.gradle.kts` dependencies.
+- Use Android Studio’s suggested upgrades for AGP.
+
+---
+
+## 3. Missing `aboutlibraries.json` Metadata File
+
+### Symptom
+- Runtime errors or empty library lists in your app.
+- Build runs but metadata is missing or AboutLibraries UI shows no libraries.
+
+### Diagnosis & Fix
+- **Verify Metadata Generation:** Confirm that the `exportLibraryDefinitions` Gradle task ran successfully.
+- **Check Output Location:** The generated file `aboutlibraries.json` must be placed where the app expects it (commonly under `src/main/assets` or as configured).
+- **Configure Plugin Correctly:** In your `build.gradle.kts`, verify the plugin's export path configuration matches your project structure.
+- **Include in Resources:** Ensure the generated metadata is included in your app’s runtime resources.
+
+### Example Configuration in `build.gradle.kts`:
+```kotlin
+aboutLibraries {
+    collect {
+        configPath = file("../config")
+        fetchRemoteLicense = false
+    }
+    export {
+        prettyPrint = true
+        outputFile = file("src/androidMain/assets/aboutlibraries.json")
+    }
+}
+```
+
+### Tips
+- Manually copy or link the file if your build setup requires.
+- Use build hooks to automate the metadata placement.
+
+---
+
+## 4. Dependency Conflicts or Duplicate Libraries
+
+### Symptom
+- Build failures with duplicate dependency errors.
+- Warnings in the console about conflicting library versions.
+- Unexpected behavior in AboutLibraries UI due to merged or duplicated entries.
+
+### Diagnosis & Fix
+- **Use Duplication Mode:** The plugin provides configurations to manage duplicates.
+- **Configure Duplication Rules:** Adjust duplication mode and rules to `LINK` or `MERGE` to resolve conflicts.
+
+### Example Duplication Configuration:
+```kotlin
+aboutLibraries {
+    library {
+        duplicationMode = com.mikepenz.aboutlibraries.plugin.DuplicateMode.LINK
+        duplicationRule = com.mikepenz.aboutlibraries.plugin.DuplicateRule.SIMPLE
+    }
+}
+```
+
+- **Inspect Gradle Dependencies:** Run `./gradlew dependencies` to find conflicting versions.
+- **Force Consistent Versions:** Use dependency resolution strategies to align versions.
+
+---
+
+## 5. Errors Related to UI Module or View Binding
+
+### Symptom
+- Errors referencing missing resources, bindings, or UI components when integrating AboutLibraries UI.
+- Crashes or build failures related to RecyclerView, FastAdapter, or ViewBinding usage.
+
+### Diagnosis & Fix
+- **Include Required UI Dependencies:** Confirm your app module includes AboutLibraries UI and related dependencies like Material Components, RecyclerView, and FastAdapter.
+- **Enable ViewBinding:** Your `build.gradle` must enable ViewBinding if you're using the legacy UI.
+
+### Example `android` block enabling ViewBinding:
+```kotlin
+android {
+    buildFeatures {
+        viewBinding = true
+    }
+}
+```
+
+- **Check for Deprecated UI Usage:** The legacy view-based UI is deprecated; consider migrating to Compose UI if possible.
+
+---
+
+## Troubleshooting Workflow Summary
+
+| Step                              | Action                                               |
+|----------------------------------|-----------------------------------------------------|
+| Plugin not applied                | Verify plugin ID, plugin version, and repositories. |
+| Build errors on Gradle/Kotlin    | Upgrade Gradle, Kotlin, and AGP to compatible versions. |
+| Missing metadata at runtime      | Run `exportLibraryDefinitions`, check output placement. |
+| Duplication conflicts            | Configure duplication rules and resolve dependency versions. |
+| UI-related build or run errors   | Include all required dependencies and enable ViewBinding.
+
+---
+
+## Additional Resources
+- [Install the Gradle Plugin](../prerequisites-installation/install-gradle-plugin)
+- [Generating Library Metadata](../configuration-and-first-run/generate-metadata)
+- [First App Integration and Usage](../configuration-and-first-run/first-app-integration)
+- [Plugin Configuration Guide](../configuration-and-first-run/plugin-configuration)
+- [Troubleshooting Common Scenarios](../../guides/best-practices-workarounds/troubleshooting-common-scenarios)
+
+## Getting More Help
+- Review the full Example App repository to see working integration examples.
+- Check the AboutLibraries GitHub issues and discussions for community support.
+- Use the [Quick Validation Checklist](../configuration-and-first-run/quick-validation) to verify your integration health.
+
+---
