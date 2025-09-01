@@ -1,0 +1,245 @@
+---
+title: "Add AboutLibraries Core & UI Dependencies"
+description: "Explains how to include the necessary AboutLibraries modules and Compose UI libraries for different platforms using a version catalog (`libs.versions.toml`) or direct Gradle dependencies. Covers selection between Compose Material2, Material3, and legacy view-based UI, ensuring you have the right setup for your target platform."
+---
+
+# Add AboutLibraries Core & UI Dependencies
+
+This guide explains how to include the necessary AboutLibraries core and UI modules in your project. You will learn how to use the recommended version catalog (`libs.versions.toml`) or direct Gradle dependencies. It also covers selecting UI modules for different platforms and choosing between Compose Material2, Material3, or the deprecated legacy view-based UI to ensure your app has the right setup.
+
+---
+
+## 1. Prerequisites
+
+Before adding AboutLibraries dependencies, ensure:
+
+- You have a Kotlin Multiplatform or Android project using Gradle.
+- The AboutLibraries Gradle plugin is installed (recommended but not mandatory).
+- You have access to Maven Central or your Maven repository hosting AboutLibraries artifacts.
+
+<Tip>
+Using the [version catalog (`libs.versions.toml`)](https://docs.gradle.org/current/userguide/platforms.html) is the best practice for managing AboutLibraries dependencies efficiently and consistently across your project.
+</Tip>
+
+---
+
+## 2. Including Dependencies via Version Catalog
+
+The recommended approach is to define AboutLibraries dependencies in your `libs.versions.toml` file. Here is how to declare the core and UI modules:
+
+```toml
+[versions]
+aboutLibraries = "{latest-version}"
+
+[libraries]
+# Core module (access generated library data)
+aboutlibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
+
+# Compose UI modules (select one or both)
+aboutlibraries-compose-core = { module = "com.mikepenz:aboutlibraries-compose-core", version.ref = "aboutLibraries" }  # Common Compose core
+aboutlibraries-compose-m2 = { module = "com.mikepenz:aboutlibraries-compose", version.ref = "aboutLibraries" }       # Material 2 UI
+aboutlibraries-compose-m3 = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }    # Material 3 UI
+
+# Deprecated View-based UI module (not recommended)
+aboutlibraries-view = { module = "com.mikepenz:aboutlibraries", version.ref = "aboutLibraries" }
+
+[plugins]
+aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutLibraries" }
+```
+
+### Add to build.gradle.kts
+
+Use the following in your module's `build.gradle.kts` file to add dependencies:
+
+```kotlin
+// Add the core module
+implementation(libs.aboutlibraries.core)
+
+// Add Compose UI modules (choose either Material 2 or Material 3 or both)
+implementation(libs.aboutlibraries.compose.m2) // For Material 2 UI
+implementation(libs.aboutlibraries.compose.m3) // For Material 3 UI
+
+// If using legacy UI (deprecated)
+// implementation(libs.aboutlibraries.view)
+```
+
+<Tip>
+Choose **one** of Material 2 or Material 3 Compose UI modules to match your app's design system for consistency. You can include both if your app uses a mix, but it's not recommended.
+</Tip>
+
+---
+
+## 3. Including Dependencies via Direct Gradle Declaration
+
+Alternatively, add dependencies directly in your Gradle module files if you do not use the version catalog.
+
+### Core Module
+
+```gradle
+implementation("com.mikepenz:aboutlibraries-core:{latest-version}")
+```
+
+### Compose UI Modules
+
+```gradle
+// Material 2
+implementation("com.mikepenz:aboutlibraries-compose:{latest-version}")
+
+// Material 3
+implementation("com.mikepenz:aboutlibraries-compose-m3:{latest-version}")
+```
+
+### Deprecated View-based UI (Legacy)
+
+```gradle
+implementation("com.mikepenz:aboutlibraries:{latest-version}")
+```
+
+<Warning>
+The legacy view-based UI is deprecated and will be removed in future releases. Migrating to the Compose UI is strongly recommended.
+</Warning>
+
+---
+
+## 4. Choosing the Compose UI Modules
+
+AboutLibraries provides several UI options to integrate seamlessly with Compose-based UIs:
+
+- **Material 2 UI (`aboutlibraries-compose`)**
+  - Stable, classic Material Design UI components.
+  - Best suited for projects still on Material 2 design.
+
+- **Material 3 UI (`aboutlibraries-compose-m3`)**
+  - Latest Material You design components.
+  - Recommended for projects using Jetpack Compose Material3.
+
+- **Compose Core UI (`aboutlibraries-compose-core`)**
+  - Common shared compose components used internally.
+  - Usually included transitively but can be added explicitly.
+
+<Tip>
+Include only the UI module(s) that match your project design system to avoid conflicts and unnecessary dependency size.
+</Tip>
+
+---
+
+## 5. Adding Dependencies for Multiplatform Projects
+
+The core and Compose UI modules support Kotlin Multiplatform targets including Android, Desktop (JVM), WASM, iOS (via Compose Native), and JavaScript.
+
+Make sure to define dependencies correctly under the respective `sourceSets` in your `build.gradle.kts`. For example:
+
+```kotlin
+kotlin {
+    androidTarget()
+    jvm("desktop")
+    wasmJs {
+        browser()
+    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    sourceSets {
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.aboutlibraries.core)
+                implementation(libs.aboutlibraries.compose.m2) // or .m3
+            }
+        }
+        val androidMain by getting
+        val desktopMain by getting
+        val wasmJsMain by getting
+        val iosMain by creating {
+            dependsOn(commonMain)
+        }
+    }
+}
+```
+
+---
+
+## 6. Summary of Dependency Setup Steps
+
+<Steps>
+<Step title="Check Prerequisites">
+Verify your project uses Gradle and has access to Maven Central.
+</Step>
+<Step title="Add Version Catalog Entries">
+Define AboutLibraries version and libraries in `libs.versions.toml`.
+</Step>
+<Step title="Add Dependencies">
+Include core and Compose UI modules via version catalog or direct Gradle dependencies.
+</Step>
+<Step title="Select UI Module">
+Choose between Material 2, Material 3, or (not recommended) legacy View-based UI.
+</Step>
+<Step title="Sync and Build">
+Sync Gradle and build your project to download dependencies.
+</Step>
+</Steps>
+
+---
+
+## 7. Example Gradle Snippet
+
+Here is a minimal example for an Android Compose project using version catalog:
+
+```kotlin
+// build.gradle.kts
+plugins {
+    id("com.android.application")
+    kotlin("android")
+    id("com.mikepenz.aboutlibraries.plugin")
+}
+
+android {
+    // Your Android config
+}
+
+dependencies {
+    implementation(libs.aboutlibraries.core)
+    implementation(libs.aboutlibraries.compose.m3) // Using Material 3 UI
+}
+```
+
+---
+
+## 8. Troubleshooting
+
+<AccordionGroup title="Common Dependency Issues">
+<Accordion title="Dependency Not Found or Failed to Resolve">
+- Confirm your repository includes Maven Central or JCenter.
+- Verify your version catalog defines the correct version.
+- Try to refresh Gradle caches (`./gradlew --refresh-dependencies`).
+</Accordion>
+<Accordion title="Conflicting Compose UI Modules">
+- Avoid including both Material 2 and Material 3 UI modules unless absolutely necessary.
+- Conflicts in compose dependencies can cause build errors or runtime UI issues.
+</Accordion>
+<Accordion title="Legacy UI Module Deprecated Warning">
+- Migrate to Compose UI modules.
+- Use [ComposeView](https://developer.android.com/jetpack/compose/interop/compose-in-views) for interoperability if mixing View and Compose.
+</Accordion>
+</AccordionGroup>
+
+---
+
+## 9. Next Steps
+
+- Continue to [Plugin Configuration](../configuration-and-first-run/plugin-configuration) to set up the AboutLibraries Gradle Plugin.
+- Learn how to generate library metadata for your app on [Generating Library Metadata](../configuration-and-first-run/generate-metadata).
+- Explore examples for integrating AboutLibraries UI components in your app and how to customize the appearance.
+
+---
+
+## 10. Additional Resources
+
+- [AboutLibraries GitHub Repository](https://github.com/mikepenz/AboutLibraries)
+- [Version Catalogs in Gradle](https://docs.gradle.org/current/userguide/platforms.html)
+- [Compose UI API Documentation](../api-reference/compose-api/compose-librariescontainer-api)
+
+
+---
+
+By correctly adding the AboutLibraries core and UI dependencies following this guide, you set a solid foundation for leveraging detailed third-party library metadata and building compliant, attractive attributions in your apps using Compose UI across multiple platforms.
