@@ -1,0 +1,193 @@
+---
+title: "Upgrade & Migration Guides"
+description: "Step-by-step guides for upgrading between major versions, including best practices for handling deprecated APIs, required configuration changes, and platform-specific considerations. Use these guides to streamline the update process and avoid common pitfalls."
+---
+
+# Upgrade & Migration Guides
+
+Step-by-step guides for upgrading between major versions, including best practices for handling deprecated APIs, required configuration changes, and platform-specific considerations. Use these guides to streamline the update process and avoid common pitfalls.
+
+---
+
+## 1. Introduction to Upgrade & Migration
+
+Upgrading AboutLibraries in your project demands careful attention to changes in APIs, configuration properties, and feature deprecations to maintain a smooth, reliable licensing and attribution experience. This guide empowers you with structured workflows and actionable instructions to execute major version upgrades confidently.
+
+Whether you're migrating from v12 to v13 or earlier versions, our guides highlight all critical breaking changes, recommended adjustments, and migration tips focused specifically on upgrade paths and API usage.
+
+
+## 2. Understanding Breaking Changes & API Deprecations
+
+### 2.1 Deprecated Legacy View-Based UI Module
+
+With the shift towards modern development, the legacy `View`-based UI module (`com.mikepenz:aboutlibraries`) is fully deprecated and will see limited support going forward.
+
+- **Why Upgrade?**
+  - Compose UI accelerates customization, multiplatform support, and modern styling.
+  - Legacy APIs rely on outdated theming and architecture incompatible with new features.
+
+- **Migration Path**
+  - Move to Compose UI components documented in [Compose UI API Reference](../api-reference/compose-api/compose-librariescontainer-api).
+  - Use `ComposeView` interoperability if your app still includes Views.
+
+<Tip>
+Avoid continuing usage of deprecated legacy APIs. Transition to Compose UI ensures future-proof integrations with improved performance and customization.
+</Tip>
+
+### 2.2 Gradle Plugin Restructure and Configuration Updates
+
+Recent versions split the Gradle plugin into two parts:
+
+- **Main plugin (`com.mikepenz.aboutlibraries.plugin`)** – registers manual export tasks.
+- **Android-specific plugin (`com.mikepenz.aboutlibraries.plugin.android`)** – automatically hooks into Android builds.
+
+**Key configuration changes:**
+- Removed `AndroidConfig` class and its properties.
+- Moved to property-based nested configurations for clarity and composability.
+
+```kotlin
+// To enable Android auto-registration in your module
+id("com.mikepenz.aboutlibraries.plugin.android")
+```
+
+### 2.3 Compose UI API Simplification
+
+The Compose UI underwent major API redesigns to enhance flexibility:
+
+- Replaced multiple parameters with centralized `LibraryDefaults` for padding, dimensions, and text styles.
+- Deprecated wrapper functions around `LibrariesContainer` in favor of direct usage with `remember*` data loading functions.
+- License dialog styling moved to allow modifiable `Modifier` chains for easier layout customization.
+
+Example migration from v11 to v12 syntax:
+
+```kotlin
+// v11.x.y
+LibrariesContainer(
+    itemContentPadding = PaddingValues(16.dp),
+    itemSpacing = 2.dp
+)
+
+// v12.x.y
+LibrariesContainer(
+    padding = LibraryDefaults.libraryPadding(contentPadding = PaddingValues(16.dp)),
+    dimensions = LibraryDefaults.libraryDimensions(itemSpacing = 2.dp),
+)
+```
+
+
+## 3. Version-specific Migration Guides
+
+### 3.1 Migrating to v13.0.0
+
+**Release highlights:**
+- Removal of deprecated APIs from v12.
+- Gradle plugin split into manual and Android auto-registration parts.
+- Improved color styling interfaces.
+
+#### Steps to Upgrade:
+1. **Plugin Update:** Replace previous plugin identifiers with the new split plugins.
+2. **Configuration Adjustments:** Remove `AndroidConfig` usage.
+3. **Code Refactor:** Update library colors interface references as follows:
+   - Rename `backgroundColor` to `libraryBackgroundColor`
+   - Rename `contentColor` to `libraryContentColor`
+   - Utilize new dialog color variants.
+4. **Migrate to Compose UI:** Remove any legacy `LibsBuilder` related calls and transition to Compose UI components.
+
+<Check>
+Verify your build scripts apply the correct plugins and the output files for metadata match new paths if customized.
+</Check>
+
+### 3.2 Migrating from v11 to v12
+
+**Key migration points:**
+- Transition Gradle plugin configurations to use property-based settings.
+- Replace deprecated wrapper `LibrariesContainer` calls with `rememberLibraries` for stateful loading.
+- Adjust padding and dimension parameters via `LibraryDefaults` as shown above.
+- Modify license dialog usage to pass padding modifiers explicitly.
+
+### 3.3 Older Migration Notes
+
+For earlier versions (v5 to v10), significant changes involve:
+- Moving away from XML-based metadata exports to JSON files.
+- Removal of `enchant` config files.
+- Reducing and simplifying UI configuration properties.
+
+Refer to the specific version release notes and the [MIGRATION.md](https://github.com/mikepenz/AboutLibraries/blob/main/MIGRATION.md) file in the repo for detailed steps.
+
+
+## 4. Practical Migration Examples
+
+### 4.1 From Legacy View to Compose UI
+
+```kotlin
+// Legacy activity start
+LibsBuilder().start(this)
+
+// Compose UI display
+val libs by rememberLibraries()
+if (libs != null) {
+    LibrariesContainer(libs = libs!!)
+}
+```
+
+### 4.2 Plugin Automation Migration
+
+```kotlin
+plugins {
+    id("com.mikepenz.aboutlibraries.plugin") // manual task plugin
+    id("com.mikepenz.aboutlibraries.plugin.android") // Android auto registration
+}
+```
+
+Modify your `aboutLibraries` Gradle DSL accordingly to match new property names and default behaviors.
+
+
+## 5. Best Practices During Upgrade
+
+- **Backup current configuration and metadata files.**
+- **Test after every configuration change** to isolate breaking points.
+- **Review deprecation warnings during build** to catch usage of removed APIs early.
+- **Consult repository changelogs and GitHub issues** for known upgrade hurdles.
+- Plan to fully migrate off legacy UI and deprecated Gradle plugin usages to keep up with feature and security improvements.
+
+
+## 6. Troubleshooting Common Upgrade Problems
+
+<AccordionGroup title="Common Issues During Upgrade">
+<Accordion title="Build Failures Due to Missing Plugins or Tasks">
+Confirm that both main and Android plugins are applied correctly. Verify that your Gradle version is compatible and that no conflicting plugin versions exist.
+</Accordion>
+<Accordion title="Deprecated API Usage Warnings Persist">
+Check your app code for calls to `LibsBuilder` or other deprecated classes. Replace with Compose UI patterns as described.
+</Accordion>
+<Accordion title="Metadata JSON Not Found at Runtime">
+Validate `exportLibraryDefinitions` task is executed and output file is correctly referenced. Update resource paths if they moved during upgrade.
+</Accordion>
+</AccordionGroup>
+
+
+## 7. Useful Links & References
+
+- [Detailed Migration Notes (MIGRATION.md)](https://github.com/mikepenz/AboutLibraries/blob/main/MIGRATION.md)
+- [Compose UI API Guide](../api-reference/compose-api/compose-librariescontainer-api)
+- [Legacy View API Deprecation Notice](../api-reference/legacy-view-api/legacy-libs-builder)
+- [Gradle Plugin Configuration](../getting-started/configuration-and-first-run/plugin-configuration)
+- [First App Integration Guide](../getting-started/configuration-and-first-run/first-app-integration)
+- [Release History & Breaking Changes](../changelog/breaking-changes-migration/breaking-changes)
+
+
+---
+
+By following these focused upgrade guides, you will ensure your AboutLibraries integration remains robust, modern, and compliant with the latest standards, unlocking productivity and legal confidence.
+
+
+---
+
+*For the full upgrade journey, validate all steps in your environment, and consult the detailed migration documents in the repository.*
+
+
+---
+
+<Info>
+This page concentrates on guiding you through version upgrades and migration concerns affecting API usage and configuration. For detailed technical references on individual components, consult the Core Data Models and Compose UI API references.
+</Info>
