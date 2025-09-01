@@ -1,0 +1,250 @@
+---
+title: "Legacy Activity, Fragment, and RecyclerView Items"
+description: "Documents legacy Android components: LibsActivity, LibsSupportFragment, and item classes (HeaderItem, LibraryItem, SimpleLibraryItem) for manual or custom rendering in view-based screens. Useful for advanced migration or maintenance scenarios."
+---
+
+# Legacy Activity, Fragment, and RecyclerView Items
+
+This documentation covers the legacy Android UI components provided by AboutLibraries, specifically the `LibsActivity`, `LibsSupportFragment`, and related RecyclerView item classes such as `HeaderItem`, `LibraryItem`, and `SimpleLibraryItem`. These components allow for manual or custom rendering of library and license information using view-based screens, offering advanced customization or support for migration scenarios from View-based to Compose UI.
+
+> **Deprecated Notice:** These legacy view-based UI components are deprecated and will be removed in future releases. Developers are strongly encouraged to migrate to the modern Compose-based UI components for improved flexibility, maintainability, and multiplatform support.
+
+---
+
+## Overview
+
+The legacy UI module provides an easy way to display open source licenses and library metadata within Android apps using standard Android components:
+
+- **`LibsActivity`**: A ready-to-use `AppCompatActivity` that hosts the license list with built-in toolbar, search, and configuration options.
+
+- **`LibsSupportFragment`**: A fragment that lists third-party libraries, supporting filtering and custom UI hooks for embedding in existing apps or multi-fragment navigation.
+
+- **RecyclerView Item Classes**: 
+  - `HeaderItem`: Displays the "About this App" header including app icon and version info.
+  - `LibraryItem`: Detailed item for each library showing name, author, license, and interaction handlers.
+  - `SimpleLibraryItem`: A minimalistic alternative showing essential library info.
+
+These components rely on the `LibsBuilder` configuration class for behavior customization and metadata injection, and utilize the popular FastAdapter library for RecyclerView handling.
+
+---
+
+## LibsActivity
+
+`LibsActivity` is the legacy standard container activity showcasing open source libraries and licenses.
+
+### Key Features
+
+- Automatically inflates a pre-defined layout with a material design toolbar and RecyclerView.
+- Supports search integration with a `SearchView` in the toolbar for real-time filtering of libraries.
+- Honors edge-to-edge theming via configuration.
+- Offers extensibility through `LibsConfiguration` UI listeners.
+- Passes configuration and display preferences via `LibsBuilder` serialized in Intent extras.
+
+### Typical Usage
+
+```kotlin
+val builder = LibsBuilder()
+    .withAboutIconShown(true)
+    .withAboutVersionShown(true)
+    .withLicenseShown(true)
+    .withSearchEnabled(true)
+    .withActivityTitle("Open Source Licenses")
+
+builder.start(this) // Launch the LibsActivity
+```
+
+### Important Details
+
+- Requires a Material3-based theme (or compatible) for toolbar display.
+- Search UI is enabled only if `searchEnabled` is set in the builder.
+- Back-navigation is automatically wired to finish the activity.
+
+---
+
+## LibsSupportFragment
+
+`LibsSupportFragment` is a Fragment displaying the same license list, suitable for embedding within multi-fragment Android apps.
+
+### Features
+
+- Uses a `RecyclerView` with FastAdapter for performant item display.
+- Supports filtering via the `Filterable` interface.
+- Life-cycle aware loading of libraries using a `LibsViewModel` backed by coroutines.
+- Allows UI interception and customization through `LibsConfiguration.uiListener` hooks before and after view creation.
+
+### How to Use
+
+```kotlin
+val fragment = LibsBuilder()
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .supportFragment()
+
+// Embed the fragment
+supportFragmentManager.beginTransaction()
+    .replace(R.id.container, fragment)
+    .commit()
+```
+
+### Filtering
+
+- Supports filtering library items by name using full-text case-insensitive matching.
+- Search UI must be implemented in host activity and connected to the fragment’s filter.
+
+### Important Caveats
+
+- Custom library comparators (sorting) cannot be used with this fragment due to internal constraints.
+
+---
+
+## LibsBuilder Configuration
+
+The `LibsBuilder` class controls the runtime behavior and content of `LibsActivity` and `LibsSupportFragment`. It is Serializable and passed via Intent extras or Fragment arguments.
+
+### Common Configuration Options
+
+| Option                     | Description                                                  | Default     |
+|----------------------------|--------------------------------------------------------------|-------------|
+| `showLicense`              | Whether to display license information                      | true        |
+| `showVersion`              | Display library version information                          | true        |
+| `showLicenseDialog`        | Show license text dialog on library item click              | true        |
+| `aboutShowIcon`            | Show app icon in About header                                | true        |
+| `aboutShowVersion`         | Show app version info in About header                        | true        |
+| `aboutMinimalDesign`       | Show minimalistic library list UI                            | false       |
+| `searchEnabled`            | Enable search UI in activity toolbar                         | false       |
+| `libraryComparator`        | Custom comparator to sort libraries (activity only)         | null        |
+| `aboutDescription`         | Custom text description for About this app section          | null        |
+| `activityTitle`            | Custom title shown in activity toolbar                       | null        |
+| `edgeToEdge`               | Enable edge-to-edge UI layout                                | false       |
+
+### Builder Pattern Usage
+
+The builder provides fluent setter methods for all options, for example:
+
+```kotlin
+LibsBuilder()
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .withSearchEnabled(true)
+    .withEdgeToEdge(true)
+```
+
+---
+
+## RecyclerView Item Classes
+
+These classes represent the UI models used by the RecyclerView adapter to render each UI element.
+
+### HeaderItem
+
+- Represents the "About this App" header.
+- Displays app icon, name, version name, and version code.
+- Configured from `LibsBuilder` and retrieves package info.
+
+### LibraryItem
+
+- Full-featured item for each library.
+- Displays library name, author, license badges, description, and interaction hooks.
+- Supports clicking on author, license, or entire item via configured listeners.
+
+### SimpleLibraryItem
+
+- A minimal alternative to `LibraryItem`.
+- Only shows essential information like library name and license name.
+- Suitable for more compact layouts or reduced complexity.
+
+---
+
+## Interaction and Customization
+
+### UI Listeners (`LibsConfiguration.LibsUIListener`)
+
+- Lets you intercept and modify views before and after creation via
+  - `preOnCreateView()`
+  - `postOnCreateView()`
+
+### Event Listeners (`LibsConfiguration.LibsListener`)
+
+- Receive callbacks for user interactions like clicks or long clicks on:
+  - App icon
+  - Library author
+  - Library content
+  - Library bottom section
+  - Special buttons
+
+### Search Implementation
+
+- The provided `LibsActivity` includes toolbar search tied directly to the fragment’s filtering.
+- If embedding `LibsSupportFragment` manually, you must implement your own search UI and connect it via the fragment’s `getFilter()` method.
+
+### Sorting
+
+- Custom sorting is supported via `libraryComparator` in `LibsBuilder`.
+- Be aware that `LibsSupportFragment` does not support custom comparators.
+
+---
+
+## Practical Example
+
+```kotlin
+// Launching legacy Activity with custom config
+val builder = LibsBuilder()
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .withSearchEnabled(true)
+    .withEdgeToEdge(true)
+    .withActivityTitle("Open Source Licenses")
+
+builder.start(context)
+
+// Creating and embedding SupportFragment
+val fragment = LibsBuilder()
+    .withLicenseShown(true)
+    .withVersionShown(true)
+    .supportFragment()
+
+supportFragmentManager.beginTransaction()
+    .replace(R.id.some_container, fragment)
+    .commit()
+```
+
+---
+
+## Common Pitfalls and Troubleshooting
+
+- **Using `libraryComparator` with Fragment:** 
+  Avoid setting a custom `libraryComparator` if you plan to use the support fragment. It causes an `IllegalArgumentException`.
+
+- **Theming:** 
+  The legacy UI requires app themes compatible with material components (typically Material3).
+
+- **Search UI:** 
+  Search is only auto-wired in `LibsActivity`. For manual fragment usage, implement your own search UI.
+
+- **Obsolete API:**
+  New development should avoid using these deprecated classes to benefit from enhanced Compose UI control and multiplatform support.
+
+- **Performance:** 
+  Legacy UI uses synchronous and basic filtering; large libraries could impact performance.
+
+---
+
+## Migration Guidance
+
+- Transition to AboutLibraries Compose UI components (`LibrariesContainer` etc.) to unlock multiplatform rendering, better customization, and future-proof support.
+- Use the `Libs` data model APIs to access metadata in Compose or other custom UI.
+- Examine the Compose UI API Reference and Guides for `rememberLibraries`, Compose customization guides, and multiplatform usage.
+
+---
+
+## Additional References
+
+- [LibsBuilder & Configuration Reference](../legacy-view-api/legacy-libs-builder)
+- [Core Data Models API Reference](../core-data-models/libs-entity-reference)
+- [Compose UI API Overview](../compose-api/compose-librariescontainer-api)
+- [Migrating from Legacy to Compose UI](MIGRATION.md)
+
+---
+
+## Summary
+This page detailed the legacy Android UI components for AboutLibraries, including `LibsActivity`, `LibsSupportFragment`, and RecyclerView item classes. It covers their configuration via `LibsBuilder`, how to embed them, customize interaction, and common usage patterns. Although deprecated, this documentation supports advanced use cases, maintenance, or staged migration planning to modern Compose UI integration.
